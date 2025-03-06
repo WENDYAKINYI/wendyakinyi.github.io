@@ -1,0 +1,136 @@
+-- 1 --
+# name_first	name_last	shut_outs
+Henderson	Alvarez 	3
+Rick	        Porcello	3
+Adam	        Wainwright	3
+Clay	        Buchholz	2
+Madison	        Bumgarner	2
+Andrew	         Cashner	2
+Johnny	           Cueto	2
+Sonny	            Gray	2
+Clayton	          Kershaw	2
+Kyle	           Lohse	2
+Martin	           Perez	2
+Julio	         Teheran	2
+Jordan	      Zimmermann	2
+Jake	         Arrieta	1
+Homer	          Bailey	1
+Josh	         Beckett	1
+Carlos	        Carrasco	1
+Josh	      Collmenter	1
+Yu	         Darvish	1
+Roenis	           Elias	1
+Scott	         Feldman	1
+Doug	          Fister	1
+Matt	           Garza	1
+Miguel	        Gonzalez	1
+Drew	       Hutchison	1
+Dallas	         Keuchel	1
+Corey	          Kluber	1
+Jon	          Lester	1
+Colby	           Lewis	1
+Tim	        Lincecum	1
+Lance	            Lynn	1
+Tyler	          Matzek	1
+Brandon   	McCarthy	1
+Shelby	          Miller	1
+Garrett   	Richards	1
+Tanner	           Roark	1
+Tyson	            Ross	1
+Danny	         Salazar	1
+Max	        Scherzer	1
+James	         Shields	1
+Drew	           Smyly	1
+Marcus	         Stroman	1
+Masahiro	  Tanaka	1
+Chris	         Tillman	1
+Josh	          Tomlin	1
+Jason	          Vargas	1
+Zach	          Wheeler	1
+C. J.	          Wilson	1
+Vance	          Worley	1
+
+
+-- 2 --
+# name_first	name_last	total_bases
+Seth	           Smith	195
+Carson	           Smith	0
+Chad	           Smith	0
+Joe	           Smith	0
+Will	           Smith	0
+
+-- 3 --
+# name	                manager_name_first	manager_name_last
+Chicago White Sox	Rich	                Renteria
+Cincinnati Reds	        Bryan	                Price
+Milwaukee Brewers	Ron	                Roenicke
+Pittsburgh Pirates	Clint	                Hurdle
+St. Louis Cardinals	Mike	                Matheny
+
+-- 4 --
+# throws	number_of_pitchers
+L	        201
+R	        491
+
+-- 5 --
+# name	                        average_pitcher_weight
+Cincinnati Reds	                223.2000
+Pittsburgh Pirates	        220.6522
+Chicago Cubs	                220.3846
+Seattle Mariners	        218.2500
+Atlanta Braves	                217.5000
+Miami Marlins	                217.4000
+Los Angeles Dodgers	        215.8000
+Washington Nationals	        215.2778
+Houston Astros	                215.0000
+San Francisco Giants	        215.0000
+Milwaukee Brewers	        214.7619
+Philadelphia Phillies	        214.6154
+New York Mets	                214.5455
+Oakland Athletics	        214.3182
+New York Yankees	        214.0909
+Detroit Tigers	                212.8333
+Texas Rangers	                212.5000
+Arizona Diamondbacks	        212.2000
+Minnesota Twins	                210.8696
+Colorado Rockies	        209.8077
+Baltimore Orioles	        209.5000
+Cleveland Indians	        209.0909
+Los Angeles Angels of Anaheim	209.0625
+Boston Red Sox	                208.6000
+Toronto Blue Jays	        207.0370
+Chicago White Sox	        206.6667
+St. Louis Cardinals	        205.8333
+Tampa Bay Rays	                204.1304
+San Diego Padres	        203.1250
+Kansas City Royals	        199.5652
+
+-- 6 --
+# name_first	name_last	height	team_name
+Terry	         Collins	69	New York Mets
+Rich	        Renteria	69	Chicago White Sox
+Buck	        Showalter	69	Baltimore Orioles
+
+-- 7 --
+# name_first	name_last	height	team_name
+Terry	         Collins	69	New York Mets
+Rich	        Renteria	69	Chicago White Sox
+Buck	       Showalter	69	Baltimore Orioles
+
+-- 8 --
+# full_name	       wild_pitches
+Sonny Gray	       15
+Felix Hernandez	       18
+Hiroki Kuroda	       13
+Garrett Richards       22
+Edinson Volquez	       15
+
+-- 9 --
+# name_last	batting_average	innings_pitched
+Zeid	          0.0000	20.6667
+Ziegler           0.0000	67.0000
+Zimmerman	  0.2804	0
+Zimmermann	  0.1818	199.6667
+Zobrist	          0.2719	0
+Zunino	          0.1986	0
+

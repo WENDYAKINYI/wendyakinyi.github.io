@@ -1,0 +1,265 @@
+---
+title: "Problem Set 6"
+author: "A. Wendy"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(GGally)
+library(ggpubr)
+library(lmtest)
+library(stringr)
+library(MASS)
+library(ResourceSelection)
+library(DescTools)
+options(dplyr.summarise.inform = FALSE)
+library(bestglm)
+```
+
+
+
+## Introduction
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Please turn in your work on Canvas. Your solution document should have your answers to the questions and should display the requested plots. Also, please upload the .RData file you generate. 
+
+
+# Question Overview
+
+The forward, backward, and best subsets models fitted in class to the SA heart data were fitted on a training set with a set called `dat.test` held out. In the questions below, we use a train-validate paradigm treating the old `dat.test` as the validation set `dat.valid`.
+
+```{r}
+dat<-read.csv("SAheart.data")
+# The "dplyr::"" specifies that the dplyr "select" function be used
+dat<-dplyr::select(dat, -row.names) 
+n<-nrow(dat)
+dat$famhist<-as.numeric(dat$famhist=="Present")
+
+
+
+
+set.seed(21466)
+train<-sample(rep(0:1,c(round(n*.3),n-round(n*.3))),n)
+mean(dat$chd[train==1])
+mean(dat$chd[train==0])
+mean(dat$chd)
+
+dat.train<-dat[train==1,]
+dat.valid<-dat[train==0,]
+```
+
+The code below fits the backward model on the training data, the forward model on the training data, and the best subsets model on the training data. 
+
+
+```{r}
+m1<-glm(chd~1,data=dat.train,family="binomial") 
+nam<-names(dat.train)[1:(ncol(dat.train)-1)]
+
+# Use stringr to avoid typing all the explanatory variables.
+fmla<-str_c("chd~",str_c(nam,collapse="+"))
+m2<-glm(fmla,data=dat.train,family="binomial")
+
+m.backward<-step(m2,direction="backward",trace=0)
+m.forward<-step(m1,scope=fmla,direction = "forward",trace=0)
+best<-bestglm(dat.train,family=binomial,nvmax=ncol(dat.train)-1)
+m.best<-best$BestModel
+
+```
+
+Note that the backward and the forward selection based on AIC produce the same model. The best subset model is different from the forward and backward models.
+
+```{r}
+setdiff(attr(summary(m.backward)$coefficients,"dimnames")[[1]],
+        attr(summary(m.forward)$coefficients,"dimnames")[[1]])
+setdiff(attr(summary(m.forward)$coefficients,"dimnames")[[1]],
+        attr(summary(m.backward)$coefficients,"dimnames")[[1]])
+setdiff(attr(summary(m.best)$coefficients,"dimnames")[[1]],
+        attr(summary(m.backward)$coefficients,"dimnames")[[1]])
+setdiff(attr(summary(m.backward)$coefficients,"dimnames")[[1]],
+        attr(summary(m.best)$coefficients,"dimnames")[[1]])
+
+```
+
+The code below loads the functions in the `helper_functions.R` file into the environment using the function `source`. A file of type .R can be viewed in RStudio and understood as a single code block. I *strongly* recommend that you look over those functions to understand what they do and how they might simplify your work on this assignment.
+
+
+```{r}
+source("helper_functions.R")
+```
+
+
+## Question 1, part 1
+
+(10 points)
+
+Please apply the Hosmer-Lemeshow test with 10 groups to the backward logistic regression model fit to the training data and the best subsets model fit to the training data. What do you conclude about the fit of these models?
+
+Both the backward logistic regression model and the best subsets model provide a good fit to the training data based on the Hosmer-Lemeshow test.
+
+
+```{r}
+# The Hosmer-Lemeshow test to the backward model
+hl_test_backward <- hoslem.test(dat.train$chd, fitted(m.backward), g = 10)
+print(hl_test_backward)
+
+# The Hosmer-Lemeshow test to the best subsets model
+hl_test_best <- hoslem.test(dat.train$chd, fitted(m.best), g = 10)
+print(hl_test_best)
+
+# Print results
+if (hl_test_backward$p.value > 0.05) {
+  cat("The backward model fits the data well (p-value:", hl_test_backward$p.value, ")\n")
+} else {
+  cat("The backward model does not fit the data well (p-value:", hl_test_backward$p.value, ")\n")
+}
+
+if (hl_test_best$p.value > 0.05) {
+  cat("The best subsets model fits the data well (p-value:", hl_test_best$p.value, ")\n")
+} else {
+  cat("The best subsets model does not fit the data well (p-value:", hl_test_best$p.value, ")\n")
+}
+```
+
+
+
+## Question 1, part 2
+
+(10 points)
+
+Please compute and display the confusion matrix, the accuracy, the precision, F1 on the training data and the McFadden Pseudo $R^2$ for the backward model and the best subsets model fit to the training data and applied to the training data.
+
+```{r}
+
+# Metrics for the backward model
+backward_metrics <- gof.summary(m.backward, dat.train)
+print("Backward Model (Training Data):")
+print(backward_metrics)
+
+# Metrics for the best subsets model
+best_metrics <- gof.summary(m.best, dat.train)
+print("Best Subsets Model (Training Data):")
+print(best_metrics)
+
+
+
+```
+
+## Question 1, part 3
+
+(10 points)
+
+Please compute and display the confusion matrix, the accuracy, the precision, F1 on the training data and the McFadden Pseudo $R^2$ for the backward model and the best subsets model fit to the training data and applied to the validation data.
+
+```{r}
+# Metrics for the backward model on the validation data
+backward_metrics_valid <- gof.summary(m.backward, dat.valid)
+print("Backward Model (Validation Data):")
+print(backward_metrics_valid)
+
+# Metrics for the best subsets model on the validation data
+best_metrics_valid <- gof.summary(m.best, dat.valid)
+print("Best Subsets Model (Validation Data):")
+print(best_metrics_valid)
+```
+
+## Question 1, part 4
+
+(10 points)
+
+Please calculate the mean deviance for the backward model and the best subsets model fit to the training data and applied to the training data. Also calculate the mean deviance for the backward model and the best subsets model fit to the training data and applied to the validation data. Which model performs best on the validation data?
+
+The backward model performs better on the validation data in terms of mean deviance  since it has a lower mean deviance . 
+```{r}
+# Calculate the mean deviance for the backward model on training data
+mean_dev_backward_train <- valid.mean.dev(m.backward, dat.train, dat.train$chd)
+print("Mean Deviance for Backward Model (Training Data):")
+print(mean_dev_backward_train)
+
+# Calculate the mean deviance for the best subsets model on training data
+mean_dev_best_train <- valid.mean.dev(m.best, dat.train, dat.train$chd)
+print("Mean Deviance for Best Subsets Model (Training Data):")
+print(mean_dev_best_train)
+
+# Calculate the mean deviance for the backward model on validation data
+mean_dev_backward_valid <- valid.mean.dev(m.backward, dat.valid, dat.valid$chd)
+print("Mean Deviance for Backward Model (Validation Data):")
+print(mean_dev_backward_valid)
+
+# Calculate the mean deviance for the best subsets model on validation data
+mean_dev_best_valid <- valid.mean.dev(m.best, dat.valid, dat.valid$chd)
+print("Mean Deviance for Best Subsets Model (Validation Data):")
+print(mean_dev_best_valid)
+```
+
+
+## Question 1, part 5
+
+(10 points)
+
+Note that `m.best` is nested in `m.backward`. Below we use the likelihood ratio test to compare the backward model and the best subsets model fit on the full data set. The null hypothesis is that the larger model does not represent a significant improvement on the smaller model. What do you conclude?
+
+Since the p_value is less than the significance level, we reject the null hypothesis meaning that the larger model  represents a significant improvement over the smaller model.
+
+```{r}
+fmla.backward<-str_c("chd~",str_c(names(m.backward$model)[-1],collapse="+"))
+fmla.best<-str_c("chd~",str_c(names(m.best$model)[-1],collapse="+"))
+
+# fit models on full data
+m.backward.full<-glm(fmla.backward,data=dat,family="binomial")
+m.best.full<-glm(fmla.best,data=dat,family="binomial")
+lrtest(m.best.full,m.backward.full)
+
+```
+
+## Question 2
+
+(no points)
+
+The code below generates a different training and validation set, this time enforcing balance in the proportion of `chd` in each. The forward, backward, and best subsets models are fit to the training data. You can run the bottom portion of the code repeatedly to see how the models change with different training data.
+
+```{r}
+set.seed(12346789)
+```
+
+```{r}
+dat.no<-dat[dat$chd==0,]
+dat.yes<-dat[dat$chd==1,]
+
+n<-nrow(dat.no)
+train<-sample(rep(0:1,c(round(n*.3),n-round(n*.3))),n)
+dat.no.train<-dat[train==1,]
+dat.no.valid<-dat[train==0,]
+
+n<-nrow(dat.yes)
+train<-sample(rep(0:1,c(round(n*.3),n-round(n*.3))),n)
+dat.yes.train<-dat[train==1,]
+dat.yes.valid<-dat[train==0,]
+
+dat.train<-rbind(dat.no.train,dat.yes.train)
+dat.valid<-rbind(dat.no.valid,dat.yes.valid)
+
+m1<-glm(chd~1,data=dat.train,family="binomial")
+nam<-names(dat.train)[1:(ncol(dat.train)-1)]
+fmla<-str_c("chd~",str_c(nam,collapse="+"))
+m2<-glm(fmla,data=dat.train,family="binomial")
+
+m.backward.2<-step(m2,direction="backward",trace=0)
+m.forward.2<-step(m1,scope=fmla,direction = "forward",trace=0)
+
+
+
+summary(m.backward.2)
+summary(m.forward.2)
+# you can comment out the next lines to skip the output of the best subsets model and have this chunk run faster
+best.2<-bestglm(dat.train,family=binomial,nvmax=ncol(dat.train)-1)
+m.best.2<-best.2$BestModel
+summary(m.best.2)
+
+
+```

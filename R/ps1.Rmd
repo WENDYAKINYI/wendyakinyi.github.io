@@ -1,0 +1,366 @@
+---
+title: "Problem Set 1, Spring 2024"
+author: "Akinyi Wendy"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(ggpubr)
+library(stats)
+library(lawstat)
+library(dplyr)
+library(ggplot2)
+library(car)
+library(lmtest) 
+```
+
+# Question 1
+
+CONTEXT - Birth weight data
+
+These birth records are randomly sampled from the live birth records from January 2021 from the CDC by "MRACE6" level. The data are available at: https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm
+
+The purpose of this analysis is to assess differences in mean birth weight of infants based on the simplified race-ethnicity identity of the mothers who are of the same age, have a high school degree or GED, are having their first child, and are not receiving WIC assistance. We will also restrict to births at 37 weeks of gestation or later. This is a very limited analysis, based on a small subset of the data. It is intended as a proof of concept for a more thorough analysis.
+
+The data set is called "dat.sample".
+
+The MAGER variable is the mother's years of age, here restricted to 20 years. 
+
+The COMBGEST variable is the completed weeks of gestation. 
+
+The DBWT variable is the birth weight in grams. 
+
+The DPLURAL variable is the number of infants born, here restricted to 1 for a single birth. 
+
+The MRACE6 variable gives limited information on the mother's ethnic identity, here restricted to 1 for White, 2 for Black and 6 for more than one race. For updated policy on handling race and ethnicity data, see: 
+
+(https://www.whitehouse.gov/omb/briefing-room/2024/03/28/omb-publishes-revisions-to-statistical-policy-directive-no-15-standards-for-maintaining-collecting-and-presenting-federal-data-on-race-and-ethnicity/ downloaded 4/5/2024)
+
+
+The MEDUC variable gives information on the mother's education, here restricted to 3 for High school graduate or GED completed.
+
+The TBO_REC variable gives information on the number of previous births, including the current birth, here restricted to 1 for a first birth.
+
+The WIC variable gives information on whether the mother received WIC assistance, here restricted to "N" for no assistance.
+
+
+```{r }
+
+load("dat.sample.RData")
+
+```
+
+Run the code chunk below to confirm that the variables are of the appropriate type. The str() function is useful for checking four things: The number of rows ("observations"), the number of variables, the names of the variables, and the type of the variables. 
+
+The table function applied here gives the number of observations for each level of the MRACE6 variable.
+
+```{r}
+str(dat.sample)
+table(dat.sample$MRACE6)
+
+```
+
+## Q1, part 1
+
+(5 points)
+
+Compute the mean and standard deviation of the values of "DBWT" for each value of MRACE6. Hint: You have sample data, not population data; this matters for computing the standard deviation. Please display a data frame with a variable "MRACE6", a variable for giving the mean of "DBWT" for that each level of that factor, and a variable for the standard deviation of "DBWT" for each level of that factor. 
+
+
+```{r }
+# Compute the mean and standard deviation of DBWT for each MRACE6
+result <- dat.sample %>%
+  group_by(MRACE6) %>%
+  summarise(
+    Mean_DBWT = mean(DBWT), # Calculates the mean of DBWT
+    SD_DBWT = sd(DBWT) # Calculates the standard deviation of DBWT
+  )
+
+# Display the result
+print(result)
+```
+
+Next, create a box plot to visualize the differences in the means. Please label your Y axis "Mean DBWT" and your X axis "MRACE6".
+
+Although many bar plots also include a visualization of the variability within groups (e.g., standard error bars), visualizing the variability is not necessary for full credit on this question. 
+
+```{r }
+# Create a box plot to visualize the differences in the means.
+ggplot(dat.sample, aes(x = MRACE6, y = DBWT)) +
+  geom_boxplot() +
+  labs(x = "MRACE6", y = "Mean DBWT") +
+  theme_minimal() +
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"))
+
+
+
+
+```
+
+
+## Q1, part 2 
+
+(5 points)
+
+You will be conducting a one-way ANOVA of DBWT by MRACE6 level, but let's assess our assumptions first. Assess the assumption of *Normality* visually and quantitatively and comment on how well the data met this assumption. To address birth weight of early term or later births, we will restrict the data to those with COMBGEST greater than or equal to 37 weeks.
+
+First, assess this assumption visually:
+
+```{r}
+dat.trim<-filter(dat.sample,COMBGEST>=37)
+
+# Code for the full data. Note the outliers.
+ggqqplot(dat.sample,x="DBWT",facet.by = "MRACE6")
+
+
+```
+
+Next, assess this assumption quantitatively:
+
+```{r}
+
+# Perform Shapiro-Wilk normality test for the MRACE6 groups
+shapiro.test(dat.trim$DBWT[dat.trim$MRACE6 == "1"])
+shapiro.test(dat.trim$DBWT[dat.trim$MRACE6 == "2"])
+shapiro.test(dat.trim$DBWT[dat.trim$MRACE6 == "6"])
+```
+
+Based on the results of your visual and quantitative assessments, do you conclude that your data meet the assumption of normality?
+
+Your answer here: 
+
+Both the visual assessment using QQ plots and the quantitative Shapiro-Wilk normality tests, show that the birth weight (DBWT) data for the subset of births with COMBGEST greater than or equal to 37 weeks generally meets the assumption of normality,with the presence of a few potential outliers in MRACE6 level "1" and "6".
+
+
+## Q1, part 3 
+
+(10 points)
+
+Assess the assumption of *equality of variances* visually and quantitatively for the trimmed data and comment on how well the data met this assumption.
+s
+First, assess this assumption visually:
+
+```{r }
+
+# Create a box plot to visualize the equality of variances
+ggplot(dat.trim, aes(x = MRACE6, y = DBWT)) +
+  geom_boxplot() +
+  labs(x = "MRACE6", y = "DBWT") +
+  theme_minimal() +
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"))
+
+
+
+
+```
+
+Next, assess this assumption quantitatively:
+
+```{r}
+
+# Perform Levene's test for equality of variances
+leveneTest(DBWT ~ MRACE6, data = dat.trim)
+
+```
+
+Based on the results of your visual and quantitative assessment, do you conclude that your data meet the assumption of equal variances across groups?
+
+Your answer here: 
+The trimmed data meets the assumption of equality of variances. The results of both the visual and quantitative assessments provide evidence that the variances are not significantly different across the MRACE6 groups for the subset of births with COMBGEST greater than or equal to 37 weeks.
+
+## Q1, part 4
+
+(10 points)
+
+You will now conduct a one-way ANOVA analysis on the trimmed data using "DBWT" as the outcome and "MRACE6" as the grouping variable.
+
+First, conduct the analysis and display the result:
+
+```{r }
+
+# Conduct the one-way ANOVA
+anova_result <- aov(DBWT ~ MRACE6, data = dat.trim)
+
+# Display of the summary of the ANOVA analysis
+summary(anova_result)
+
+
+  
+```
+
+Second, answer the questions below:
+
+A) What is the null hypothesis being tested in this one-way ANOVA analysis?
+
+Your answer here: The mean birth weights (DBWT) are equal across all racial-ethnic identity groups (MRACE6).
+
+
+B) Which of the three statements (1, 2, or 3) is an appropriate conclusion based on the results of your analysis? Only one of the statements is fully correct. 
+
+  Statement 1: I rejected the null hypothesis and concluded that at the data are not consistent with equal means for the levels of "MRACE6".
+  
+  Statement 2: I rejected the null hypothesis and concluded that all of the levels of "MRACE6" had significant differences in mean "DBWT".
+  
+  Statement 3: "I failed to reject the null hypothesis and concluded that there was not a statistically significant difference in the mean "DBWT" among the levels of "MRACE6". 
+  
+Your answer here (1, 2, or 3): 1
+
+
+
+
+## Q1, part 5 
+
+(10 points)
+
+When the null hypothesis in ANOVA is rejected, you conclude that at least one group mean is different than the others. You may then wonder which of the means is different. There are numerous tests that have been developed to answer this question. These are sometimes referred to as "post hoc" tests because they are usually done after an ANOVA has returned a significant result. 
+
+One of the most common of these is the Tukey Honest Significant Difference test, often shortened to Tukey's HSD. You will conduct this analysis to determine which of the fat type means had statistically significant differences from each other.
+
+First, answer the following question:
+
+A) How many unique pairwise comparisons of "DBWT" means are possible to test in this data set?
+
+Your answer here: 
+Number of unique pairwise comparisons = $n! / (2! * (n - 2)!)$
+
+Where; $n$ = the number of groups or levels.
+
+Since there are three levels of "MRACE6" , $n = 3$ 
+Substituting for $n$ ;
+=$3! / (2! * (3 - 2)!) = (3 * 2 * 1) / (2 * 1) = 6 / 2 = 3$
+
+Next, conduct the Tukey HSD test and answer the question below:
+
+```{r }
+
+# Conduct the Tukey HSD test
+tukey_result <- TukeyHSD(anova_result)
+
+# Display the results of the Tukey HSD test
+print(tukey_result)
+
+
+```
+
+B) List the pair/s, if any, of means that have statistically significant differences at the $p\leq 0.05$ level after the Tukey HSD adjustment here. Be sure to include the names of the groups. 
+
+Your answer here: 
+
+Pair 6-2, has a p-value 0.011, which is less than the significance level of 0.05 showing a statistically significant difference in mean "DBWT" between MRACE6 level 6 and MRACE6 level 2.
+
+# Question 2
+
+(10 points)
+
+The following data are from a study of effectiveness of vitamin D supplements for pregnant women. The details are available in the "Study Details" tab in https://clinicaltrials.gov/ct2/show/results/NCT00292591?term=race&recrs=e&rslt=With&cond=Pregnancy&rank=1&sect=X70156#outcome1
+
+The outcome variable is circulating hydroxyvitamin D concentration. The following code creates a data frame in which the "treat" column identifies the dosage of cholecalciferol used, the "ct" variable gives the number of participants completing the study in the treatment, the "conc" column gives the mean hydroxyvitamin D concentration in nanograms per milliliter, and the "sd" column gives the sample standard deviation of the "conc" within the treatment. Please use this information to conduct an ANOVA test of the equality of the means of the groups. Please comment on the extent to which the hypotheses of the ANOVA are satisfied (independence, Normality, equal variance), and the interpretation of the results if the hypotheses are satisfied. (10 points)
+
+
+```{r}
+treat<-c("iu400","iu2000","iu4000")
+ct<-c(102,111,110)
+conc<-c(32.5,41.0,45.7) 
+sd<-c(14.4,14.6,14.3) 
+dat<-data.frame(treat,ct,conc,sd)
+```
+
+Please use this information to conduct an ANOVA test of the equality of the means circulating hydroxyvitamin D concentration of the treatment groups. (Hint: the SSE can be constructed from the sample standard deviations.)
+
+```{r}
+
+# The necessary statistics for ANOVA calculations
+# Degrees of freedom
+n <- sum(dat$ct)
+k <- length(unique(dat$treat))
+df_between <- k - 1
+df_within <- n - k
+
+# Calculate SSB (Sum of Squares Between)
+grand_mean <- mean(dat$conc)
+ssb <- sum(dat$ct * (dat$conc - grand_mean)^2)
+
+# Calculate SSW (Sum of Squares Within)
+ssw <- sum((dat$ct - 1) * dat$sd^2)
+
+# Calculate Mean Squares (MS)
+ms_between <- ssb / df_between
+ms_within <- ssw / df_within
+
+# Calculate F statistic
+f_statistic <- ms_between / ms_within
+
+# Calculate p-value
+p_value <- pf(f_statistic, df_between, df_within, lower.tail = FALSE)
+
+# Print results
+cat("SSB (Sum of Squares Between):", ssb, "\n")
+cat("SSW (Sum of Squares Within):", ssw, "\n")
+cat("Degrees of Freedom - Between:", df_between, "\n")
+cat("Degrees of Freedom - Within:", df_within, "\n")
+cat("Mean Squares (MS) - Between:", ms_between, "\n")
+cat("Mean Squares (MS) - Within:", ms_within, "\n")
+cat("F Statistic:", f_statistic, "\n")
+cat("P-Value:", p_value, "\n")
+
+```
+
+
+
+
+B) Please comment on the extent to which the hypotheses of the ANOVA are satisfied (independence, Normality, equal variance (think pairwise F-tests)) 
+
+
+
+```{r}
+#Independence: The chi-squared test conducted for the contingency table of participants who completed the study and those who dropped out, the p-value of 0.5981 suggests that there is no significant association between treatment group and dropout rate. This supports the assumption of independence of treatment group and discontinuation.
+
+# Quantitative check normality assumption
+shapiro.test(dat$conc)
+
+#Normality: The Shapiro-Wilk normality test on the hydroxyvitamin D concentration data results in a p-value of 0.6854, indicating that the data is normally distributed. 
+
+# Pairwise F-tests for equal variance assumption
+f_test_iu2000_vs_iu400 <- (sd[2]^2) / (sd[1]^2)
+f_test_iu4000_vs_iu2000 <- (sd[3]^2) / (sd[2]^2)
+f_test_iu4000_vs_iu400 <- (sd[3]^2) / (sd[1]^2)
+
+f_test_iu2000_vs_iu400
+f_test_iu4000_vs_iu2000
+f_test_iu4000_vs_iu400
+
+#Equal Variance:The pairwise F-tests indicate no significant difference in variances between treatment groups, supporting the assumption of equal variance.. 
+
+```
+
+
+
+C) Please give an interpretation of the results under the assumption that the hypotheses of independence, Normality,and equal variance are satisfied. 
+
+Your answer here:
+
+Given the very small p-value from the ANOVA test, we reject the null hypothesis of equal means across the treatment groups. This result indicates that different dosages lead to different mean concentrations, and these differences are statistically significant.
+
+The calculated F-statistic of 22.62967, further supports that there is a substantial difference in means compared to the variability within the groups.
+
+In conclusion, the dosage of cholecalciferol has a significant effect on circulating hydroxyvitamin D concentration in pregnant women having satisfied the assumptions of independence, normality, and equal variance.
+
+
+
+
+By the way, the clinical trial started with larger numbers of participants in all the groups. The rate of discontinuation is consistent with independence of treatment group and discontinuation.
+
+```{r}
+contingency<-data.frame(complete=c(102,111,110),drop=c(64,56,58 ))
+chisq.test(contingency)
+
+```
+
+
+

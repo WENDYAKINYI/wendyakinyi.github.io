@@ -1,0 +1,3 @@
+cut -f9 -d' ' Data.txt > T_DAILY_AVG.txt
+sort -n T_DAILY_AVG.txt > T_DAILY_AVG_sorted.txt
+cut -f9 -d' ' Data.txt | sort -n | python3 compute_stats.py

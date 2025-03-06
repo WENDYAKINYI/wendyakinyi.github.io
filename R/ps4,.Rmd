@@ -1,0 +1,208 @@
+---
+title: "Problem Set 4 Solutions"
+author: "A.Wendy"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=TRUE}
+
+# Load any packages, if any, that you use as part of your answers here
+# For example: 
+
+library(GGally)
+library(ggpubr)
+library(MASS)
+library(tidyverse)
+library(leaps)
+library(boot) # for the bootstrap analysis
+library(rpart)
+library(rattle)
+
+```
+
+
+
+# Introduction
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Please turn in your work on Canvas. Your solution document should have your answers to the questions and should display the requested plots.
+
+# Question 1 
+
+This question is based on a sample of infants born full-term in single births (not one of twins or higher multiples) drawn from a record of births in USA, 2019-2022, downloaded https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm , 1/4/2022
+
+These data represent a simple random sample of data for such infants for each month from among the cases with no missing data for the variables of interest. 
+The code book is included in the assignment to provide information about the variables.
+
+The code below loads the data and supplies some visual summaries of the data.
+
+```{r}
+load("dbwt_gest_lm.RData")
+dat.years$DPLURAL<-NULL
+dat.years$MRACE6<-as.factor(dat.years$MRACE6)
+dat.years$PAY_REC<-as.factor(dat.years$PAY_REC)
+dat.years$DOB_YY<-as.factor(dat.years$DOB_YY)
+fit<-rpart(DBWT~.,data=dat.years)
+rattle::fancyRpartPlot(fit)
+```
+
+```{r}
+ggplot(dat.years, aes(x=COMBGEST, y=DBWT)) + geom_point(alpha=.1) + geom_smooth(method = "loess")
+
+ggplot(dat.years, aes(x=WTGAIN, y=DBWT)) + geom_point(alpha=.1) + geom_smooth(method = "loess")
+
+ggplot(dat.years, aes(x=MAGER,y=DBWT)) + geom_point(alpha=.1) + geom_smooth(method = "loess")
+
+ggplot(dat.years, aes(x=PWgt_R, y=DBWT )) + geom_point(alpha=.1) + geom_smooth(method = "loess")
+
+ggplot(dat.years, aes(x=MEDUC, y=DBWT )) + geom_point(alpha=.1) + geom_smooth(method = "loess")
+
+ggplot(filter(dat.years,CIG_1!=0), aes(x=CIG_1, y=DBWT)) + geom_point() + geom_smooth(method = "loess")
+
+```
+## Question 1, part 1
+
+(10 points)
+
+On the basis of the plots above, we construct a linear regression model of `DBWT` on the variables in the regression tree, their pairwise interactions, and their quadratic and cubic terms, together with additional variables that may be of interest. 
+
+The numeric explanatory variables are centered before fitting the model. 
+
+On the basis of the model summary and the diagnostic plots, do you think the hypotheses of a linear regression model are satisfied?
+
+Based on the model summary some coefficients COMBGEST, WTGAIN and MAGER have p-values below 0.05, suggesting that they are statistically significantly associated with DBWT.This is further suported by the plots which show linear associations between these variables. Therefore, given the statistical significance of the key predictors and the visual evidence of linear associations, it seems reasonable to conclude that the assumptions of a linear regression model are likely satisfied for this dataset.
+
+```{r}
+scale.vars<-c("COMBGEST","WTGAIN","M_Ht_In","PWgt_R","MAGER","CIG_1")
+# center the numeric variables.
+dat.scale<-dat.years%>%mutate(across(where(is.numeric),function(x){x-mean(x)}))
+dat.scale$DBWT<-dat.years$DBWT # don't center the outcome variable
+# construct pieces of the formula
+interact.term<-str_c("(",str_c(c(scale.vars,"SEX"),collapse="+"),")^2")
+quad.term<-str_c("I(",scale.vars,"^2)",collapse="+")
+cube.term<-str_c("I(",scale.vars,"^3)",collapse="+")
+# assemble the formula
+fmla<-as.formula(str_c("DBWT~",interact.term, "+",quad.term,"+",cube.term))
+# fit the model
+m.scale<-lm(fmla,data=dat.scale)
+summary(m.scale)
+
+```
+
+## Question 1, part 2
+
+(5 points)
+
+Based on the model above, are the chosen predictors informative for predicting birth weights? Are the chosen predictors more informative for predicting birth weights that simply using the mean birth weight?
+
+Yes, the chosen predictors, particularly COMBGEST, WTGAIN, and MAGER, are informative for predicting birth weights, given their statistical significance in the model.This suggests that they capture meaningful variability in birth weights that cannot be explained by using the mean birth weight alone.
+
+## Question 1, part 3
+
+(10 points)
+
+The model below is an unscientific guess at a simpler model for `DBWT`. Assuming adequate satisfaction of the hypotheses of multiple regression, is the larger model above a statistically significantly better fit than the simpler model below? 
+
+No,the additional predictors and complexity introduced in the larger model do not provide a significant improvement in explaining the variability in the response variable (DBWT) compared to the simpler model with fewer predictors. Therefore, the simpler model is as effective as the larger model in predicting birth weights.
+
+```{r}
+m.guess<-lm(DBWT~COMBGEST+I(COMBGEST^2)+I(COMBGEST^3)+WTGAIN+I(WTGAIN^2)+I(WTGAIN^3)+(SEX+PWgt_R)^2+MAGER+MRACE6+CIG_1,data=dat.scale)
+summary(m.guess)
+plot(m.guess)
+shapiro.test(residuals(m.guess))
+
+```
+## Question 1, part 4
+
+(5 points)
+
+Consider the models below. In the first, the `CIG` variables are all included as explanatory variables. In the second, the summed `CIG` variables are included as an explanatory variable. Are the two models nested? That is, can one of the models be considered a special case of the other? Please explain your answer. 
+
+Yes, the two models are nested because Model m.1 can be considered a special case of model m.4 since the explanatory variable in m.1, the summed CIG variable, is a combination of the individual CIG variables included in m.4.
+
+```{r}
+m.4<-lm(DBWT~COMBGEST+I(COMBGEST^2)+I(COMBGEST^3)+WTGAIN+I(WTGAIN^2)+I(WTGAIN^3)+(SEX+PWgt_R)^2+MAGER+MRACE6+CIG_0+CIG_1+CIG_2+CIG_3,data=dat.scale)
+summary(m.4)
+
+m.1<-lm(DBWT~COMBGEST+I(COMBGEST^2)+I(COMBGEST^3)+WTGAIN+I(WTGAIN^2)+I(WTGAIN^3)+(SEX+PWgt_R)^2+MAGER+MRACE6+I(CIG_0+CIG_1+CIG_2+CIG_3),data=dat.scale)
+summary(m.1)
+
+
+```
+(Note that the four `CIG` variables are not statistically significant in the model `m.4` but the summed `CIG` variable is statistically significant in the model `m.1`.)
+
+# Question 2
+
+(10 points)
+
+Our primary interest is modeling untransformed DBWT. However, it is possible that a transformation of DBWT could improve the fit of the model. Please check whether the untransformed value of DBWT is a good choice for the outcome variable according to a Box-Cox analysis. 
+
+Since the lambda value is close to 1, the untransformed DBWT variable is a good choice for the outcome variable.
+```{r}
+lambda<-boxcox(m.guess)
+# at what index is the maximum log likelihood?
+ll.best<-which(lambda[[2]]==max(lambda[[2]]))
+# what is the corresponding lambda?
+lambda.best<-lambda[[1]][ll.best]
+lambda.best
+
+```
+
+# Question 3
+
+(10 points)
+
+Though the model `m.guess` does not have perfect normality of residuals, the qqplot shows regions of close agreement between the quantiles of the residuals and quantiles of the Normal distribution. We will use bootstrapping to estimate the 95% and 99% bootstrap confidence intervals for the coefficients in the model. The code below uses tools from the `boot` package to estimate the 95% confidence intervals for the coefficients in a model closely related to the model `m.guess`. The `bca` bootstrap intervals are considered a good all-purpose choice for the confidence intervals. 
+
+Please use these to assess whether any variables that are significant at the $0.05$ level in the reference model are not significant at the $0.05$ level in the bootstrapped models and whether any variables that are significant at the $0.01$ level in the reference model are not significant at the $0.05$ level in the bootstrapped model. 
+
+The variables COMBGEST, I(COMBGEST^2), I(COMBGEST^3), WTGAIN, SEXM, MRACE62, CIG_1, SEXM:PWgt_R are all significant at the 0.05 level in the reference model as well as in the bootstrapped models.
+The variables COMBGEST, I(COMBGEST^2), I(COMBGEST^3), WTGAIN, SEXM, MRACE62 are significant at the 0.01 level in the reference model  as well as in the bootstrapped models.
+
+Based on the bootstrap analysis, all variables that are significant at the 0.05 level in the reference model remain significant, and there are no changes in significance levels for variables initially significant at the 0.01 level.
+
+```{r, cache=TRUE}
+# The small categories in MRACE6 are dropped to prsevent differences in the level counts from causing problems in the bootstrapping
+
+dat.boot<-filter(dat.scale,MRACE6 %in% c("1","2"))
+dat.boot$MRACE6<-droplevels.factor(dat.boot$MRACE6)
+
+# reference model
+
+summary(lm(DBWT~COMBGEST+I(COMBGEST^2)+I(COMBGEST^3)+WTGAIN+I(WTGAIN^2)+I(WTGAIN^3)+(SEX+PWgt_R)^2+MAGER+MRACE6+CIG_1,data=dat.boot))
+
+# function to collect the coefficients from the model for bootstrap samples
+boot.coeffs<-function(dat.this,indices){
+  dat.this<-dat.this[indices,]
+  m.this<-
+    lm(DBWT~COMBGEST+I(COMBGEST^2)+I(COMBGEST^3)+WTGAIN+I(WTGAIN^2)+I(WTGAIN^3)+(SEX+PWgt_R)^2+MAGER+MRACE6+CIG_1,data=dat.this)
+  return(m.this$coefficients)
+}
+
+set.seed(1234567)
+# Create 1000 bootstrapped values of the corresponding coefficients
+
+boot.coeffs.output<-boot(dat.boot,boot.coeffs,1000)# a little slow
+boot.coeffs.output$t0
+
+# syntax for the 95%  and 99% bootstrap confidence intervals for the first coefficient
+
+boot.ci(boot.coeffs.output,index=1,type="bca",conf=.95)
+boot.ci(boot.coeffs.output,index=1,type="bca",conf=.95)$bca[4:5]
+boot.ci(boot.coeffs.output,index=1,type="bca",conf=.99)
+```
+
+
+```{r, cache=TRUE}
+# 95% and 99% BCIs for each coefficient
+for (i in 2:length(boot.coeffs.output$t0)) {
+  # 95% BCI
+  ci_95 <- boot.ci(boot.coeffs.output, index = i, type = "bca", conf = 0.95)
+  cat("Coefficient", names(boot.coeffs.output$t0)[i], "- 95% BCI:", ci_95$bca[4:5], "\n")
+
+  # 99% BCI
+  ci_99 <- boot.ci(boot.coeffs.output, index = i, type = "bca", conf = 0.99)
+  cat("Coefficient", names(boot.coeffs.output$t0)[i], "- 99% BCI:", ci_99$bca[4:5], "\n")
+}
+```

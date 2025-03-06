@@ -1,0 +1,628 @@
+---
+title: "Problem Set 2"
+author: "Akinyi Wendy"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(AER)
+library(ggpubr)
+library(lawstat)
+library(nortest)
+options(dplyr.summarise.inform = FALSE)
+library(MASS)
+library(dplyr)
+library(foreign)
+library(stats)
+library(car)
+library(rstatix)
+```
+
+
+## Introduction
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Please turn in your work on Canvas. Your solution document should have your answers to the questions and should display the requested plots. 
+
+# Question 1
+
+## Question 1 Context
+
+CONTEXT - Birth weight data
+
+These birth records are randomly sampled from the live birth records from 2021 from the CDC by "MRACE6" level. The data are available at: https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm
+
+The purpose of this analysis is to assess differences in mean birth weight of infants based on the simplified race-ethnicity identity of the mothers who are of the same age, have a high school degree or GED, are having their first child, and are not receiving WIC assistance. We will also restrict to births at 37 weeks of gestation or later. This is a very limited analysis, based on a small subset of the data. It is intended as a proof of concept for a more thorough analysis.
+
+The data set is called "dat.case".
+
+The MAGER variable is the mother's years of age, here restricted to 20 years. 
+
+The COMBGEST variable is the completed weeks of gestation. 
+
+The DBWT variable is the birth weight in grams. 
+
+The DPLURAL variable is the number of infants born, here restricted to 1 for a single birth.
+
+The MRACE6 variable gives limited information on the mother's ethnic identity, here restricted to 1: White (only), 2: Black (only),3:AIAN (only), 4:Asian (only), 5:NHOPI (only), 6: More than one race.
+
+ For updated policy on handling race and ethnicity data, see: 
+
+(https://www.whitehouse.gov/omb/briefing-room/2024/03/28/omb-publishes-revisions-to-statistical-policy-directive-no-15-standards-for-maintaining-collecting-and-presenting-federal-data-on-race-and-ethnicity/ downloaded 4/5/2024)
+
+
+The MEDUC variable gives information on the mother's education, here restricted to 3 for High school graduate or GED completed.
+
+The TBO_REC variable gives information on the number of previous births, including the current birth, here restricted to 1 for a first birth.
+
+The WIC variable gives information on whether the mother received WIC assistance, "N" for no assistance, "Y" for assistance.
+
+You need to process your data to facilitate analysis. Specifically, we need to make sure that the variable type is set to 'factor' for both of our grouping variables and 'num' for our outcome variable.
+
+```{r }
+
+dat<-load("dat_case.RData") # file generated in birthweight_anova.Rmd probstat_1-2U/birthdata
+dat.case$MRACE6<-factor(dat.case$MRACE6) # originally numeric
+```
+
+The code below creates a factor variable "gp" that combines the MRACE6 and WIC variables.
+
+```{r}
+
+dat.case$gp<-interaction(dat.case$MRACE6,dat.case$WIC) 
+
+```
+
+Check this by running the following code chunk. 
+
+```{r}
+dat.case%>%group_by(gp)%>%summarize(n=n(),race.gp=unique(MRACE6),wic.gp=unique(WIC))
+
+```
+
+
+```{r}
+dat.agg<-dat.case%>%group_by(MRACE6,WIC)%>%
+  summarize(mean.gp=mean(DBWT),sd.gp=sd(DBWT),ct=n())
+ggplot(dat.agg,aes(x=MRACE6,y=mean.gp,fill=WIC))+geom_col(position = "dodge")+
+ geom_errorbar(aes(ymin=mean.gp-sd.gp/sqrt(ct),
+                   ymax=mean.gp+sd.gp/sqrt(ct)),width=.2,position=position_dodge(.9))
+```
+
+## Question 1, part 1 
+
+(5 points)
+
+Provide a visual assessment and a quantitative assessment for the assumption of *normality* for each cell. Hint: Remember that a cell contains the observations that make up a particular combination of two factors. Therefore, there will be as many graphs/quantitative tests as are unique combinations of WIC and MRACE6.
+
+Code for your visual assessment of Normality
+
+```{r}
+
+# Visual Assessment of Normality using Q-Q Plots
+qq_plot <- ggqqplot(dat.case, "DBWT", facet.by = c("MRACE6", "WIC")) +
+  ggtitle("Q-Q Plot for Each Cell")
+
+# Print the Q-Q plot with facetting and shaded region
+print(qq_plot)
+```
+
+Code for your quantitative assessment of Normality
+
+```{r}
+
+# Code for quantitative assessment of normality for each cell
+# Quantitative Assessment of Normality using Shapiro-Wilk Test
+# Perform Shapiro-Wilk test for each group
+shapiro_test_results <- dat.case %>%
+  group_by(gp) %>%
+  summarize(shapiro_p_value = shapiro.test(DBWT)$p.value)
+
+# Print Shapiro-Wilk test results
+print(shapiro_test_results)
+
+
+```
+
+
+## Question 1, part 2 
+
+(5 points)
+
+Provide a box-plot based visual assessment and a quantitative assessment for the assumption of *equality of variances* for each cell. 
+
+Code for your visual assessment of equality of variances
+
+```{r }
+
+# Code for visual assessment of equality of variances for each cell
+
+# (possibly useful syntax) +facet_wrap(~WIC)
+# Visual Assessment of Equality of Variances using Box Plots
+box_plot <- ggplot(dat.case, aes(x = gp, y = DBWT)) +
+  geom_boxplot() +
+  facet_wrap(~WIC) +
+  ggtitle("Box Plots for Equality of Variances")
+
+# Print the box plot with facetting
+print(box_plot)
+
+
+```
+
+Code for your quantitative assessment of equality of variances
+
+```{r }
+
+# Code for quantitative assessment of equality of variances for all the cells
+
+# Quantitative Assessment of Equality of Variances using Levene's Test
+levene_test <- leveneTest(DBWT ~ gp, data = dat.case)
+
+# Print the Levene's test results
+print(levene_test)
+
+
+```
+
+## Question 1, part 3 
+
+(5 points)
+
+Conduct a two-way ANOVA with an interaction between MRACE6 and WIC. Use DBWT as the outcome. Please be sure to display your ANOVA results using the summary() function. 
+
+```{r}
+# Conducting a two-way ANOVA with interaction
+anova_model <- aov(DBWT ~ MRACE6 * WIC, data = dat.case)
+
+# Displaying the ANOVA results
+summary(anova_model)
+
+  
+```
+
+## Question 1, part 4 
+
+(5 points)
+
+Be sure to have completed the two-way ANOVA with an interaction analysis before answering the following four questions. Please answer the following questions on the assumption that the hypotheses of the ANOVA are satisfied sufficiently that the p-values are valid.
+
+### Main effects hypotheses - two questions to answer
+
+Please answer assuming that the hypotheses of the ANOVA are met.
+
+A) Please select the statement that is the best interpretation of the p-value associated with the main effect of WIC participation.
+
+  Statement 1: I reject the null hypothesis and conclude that there is a statistically significant difference in the mean birth weight between the WIC participation groups.
+  
+  Statement 2: I fail to reject the null hypothesis and conclude that there is weak evidence of against the hypothesis that the mean birth weight is equal in the two WIC participation groups.
+  
+Your answer here:$ Statement 2$
+  
+B) Please select the statement that is the best interpretation of the p-value associated with the main effect of MRACE6.
+
+  Statement 1: I reject the null hypothesis and conclude that at least one level of MRACE6 has a statistically significantly different mean DBWT from others.
+  
+  Statement 2: I fail to reject the null hypothesis and conclude that there is no statistically significant difference in the mean birth weight between the MRACE6 groups.
+  
+Your answer here:$ Statement 1$
+  
+### Interaction hypothesis - 2 questions to answer
+
+C) Please select the statement that is the best interpretation of the p-value associated with the interaction between WIC and MRACE6.
+
+  Statement 1: The interaction between WIC level and MRACE6 type is statistically significant.
+  
+  Statement 2: The interaction between WIC level and MRACE6 type is not statistically significant.
+  
+Your answer here:$ Statement 2$
+  
+D) Based on your response to the previous question about the interaction, can you interpret the main effects in a straightforward fashion? 
+
+The main effect of WIC can be interpreted directly, as there is no evidence of an interaction with MRACE6. The lack of a significant main effect of WIC suggests that the mean birth weight does not differ between mothers who received WIC assistance and those who did not, regardless of their race-ethnicity.Similarly, the main effect of MRACE6 can be interpreted directly, as there is no evidence of an interaction with WIC. The significant main effect of MRACE6 indicates that the mean birth weight differs among the different race-ethnicity groups, regardless of whether the mothers received WIC assistance or not.
+
+Put differently, is it justifiable to make a conclusion about the effect of WIC while ignoring the effect of MRACE6 (and vice versa)?
+ 
+Your answer here (yes or no):
+Yes, it would be justifiable to interpret the main effects of WIC and MRACE6 independently without considering their interaction since we can make conclusions about the effect of WIC participation on birth weight while ignoring the effect of MRACE6, and vice versa. 
+### In case you are interested in post-hoc tests:
+
+```{r}
+# m<-aov(DBWT~MRACE6,data=dat.case)
+# TukeyHSD(m)
+
+```
+
+
+# Question 2
+
+## Question 2 Context
+
+The data set `oats` is in the `MASS` package. A description of the data set can be found in the documentation for `oats`. There you will see
+"The yield of oats from a split-plot field trial using three varieties and four levels of manurial treatment. The experiment was laid out in 6 blocks of 3 main plots, each split into 4 sub-plots. The varieties were applied to the main plots and the manurial treatments to the sub-plots...
+
+B
+Blocks, levels I, II, III, IV, V and VI.
+
+V
+Varieties, 3 levels.
+
+N
+Nitrogen (manurial) treatment, levels 0.0cwt, 0.2cwt, 0.4cwt and 0.6cwt, showing the application in cwt/acre.
+
+Y
+Yields in 1/4lbs per sub-plot, each of area 1/80 acre."
+
+Below, these data are analyzed using a analysis for a splitplot design treating the values of "N" as unordered factors. 
+
+## Question 2, part 1
+
+(5 points)
+
+Based on the output below, are the assumptions of Normality and equal variance among groups met at each level of analysis? Please respond yes or no and explain your reasoning.
+
+Yes, based on the visual and quantitative assessments for the assumptions of normality and equality of variance appear to be reasonably satisfied at both the Variety and Nitrogen levels of this split-plot analysis.
+
+The normality assumption appears to be met based on the Q-Q plots which show the points falling close to the diagonal reference line for each variety and nitrogen levels. The Shapiro-Wilk test p-values are also all above 0.05, therefore we fail to reject the null hypothesis that the data is normally distributed.
+
+The equal variance assumption also appears to be met based on the boxplots showing similar spread across the varieties and nitrogen levels. The Brown-Forsythe test also shows p-values greater than 0.05, therefore we fail to reject the null hypothesis of equal variances.
+
+```{r}
+# preliminary exploration
+data(oats)
+table(oats$B)
+table(oats$B,oats$V)
+table(oats$V,oats$N)
+
+ggplot(data=oats,aes(x=V,y=Y,fill=N))+geom_col(position = "dodge")+facet_wrap("B")+theme(axis.text.x = element_text(angle = 45, hjust=1))
+```
+
+Normality
+
+At the level of `V`, conceptually, the block offset for each block is subtracted from the yields in in that block, then an ANOVA is performed based on the assumption that the resulting yields for each `V` sub-block are Normally distributed with equal variances among the blocks.
+
+Format the data for this level:
+
+```{r}
+oats.v<-oats
+oats.v$mean.v<-mean(oats.v$Y)
+oats.v<-oats.v%>%group_by(B)%>%mutate(blockoff.set=mean(Y)-mean.v)
+oats.v$Y<-oats.v$Y-oats.v$blockoff.set
+
+# Aggregate across the fertilizer observations in each 
+# variety treatment in each block.
+oats.v<-oats.v%>%group_by(B,V)%>%mutate(Y=mean(Y))
+oats.v<-oats.v%>%group_by(V)%>%mutate(variety.mean=mean(Y))
+
+## SSA check
+sum((oats.v$variety.mean-mean(oats.v$Y))^2)
+## SSE check
+sum((oats.v$Y-oats.v$variety.mean)^2)
+
+temp<-distinct(dplyr::select(oats.v,B,V,Y))
+```
+
+Visualize Normality:
+
+```{r}
+ggqqplot(temp,x="Y",facet.by = "V")
+```
+
+Check with Shapiro-Wilk
+
+```{r}
+temp%>%group_by(V)%>%summarize(pval=shapiro.test(Y)$p)
+```
+
+Visualize equality of variance:
+
+```{r}
+ggplot(data=temp,aes(x=V,y=Y))+geom_boxplot()
+```
+
+Check with Brown-Forsythe:
+
+```{r}
+leveneTest(temp$Y,temp$V) # defaults to Brown-Forsythe
+```
+
+At the level of `N`, conceptually, the (block,variety) offset for each (block,variety) pair is subtracted from the yields in that (block,variety) sub-block, then an ANOVA is performed based on the assumption that the resulting yields for each `N` sub-sub-block are Normally distributed with equal variances among the (block,variety) pairs.
+
+Format the data for the `N` level:
+
+```{r}
+# Subtract out effects from above.
+oats.n<-oats
+oats.n$mean<-mean(oats.n$Y)
+oats.n<-oats.n%>%group_by(B,V)%>%mutate(B.V.offset=mean(Y)-mean)
+oats.n$Y<-oats.n$Y-oats.n$B.V.offset
+
+oats.n<-oats.n%>%group_by(N)%>%mutate(N.mean=mean(Y))
+oats.n<-oats.n%>%group_by(V)%>%mutate(V.mean=mean(Y))
+
+```
+
+
+Visualize Normality:
+
+```{r}
+
+ggqqplot(oats.n,x="Y",facet.by = "N")
+```
+
+Check with Shapiro-Wilk
+
+```{r}
+oats.n%>%group_by(N)%>%summarize(pval=shapiro.test(Y)$p)
+```
+
+Visualize equality of variance:
+
+```{r}
+ggplot(data=oats.n,aes(x=N,y=Y))+geom_boxplot()
+```
+
+Check with Brown-Forsythe:
+
+```{r}
+leveneTest(oats.n$Y,oats.n$N) # defaults to Brown-Forsythe
+```
+
+
+## Question 2, part 2
+
+(5 points)
+
+Please perform a splitplot analysis suited to this experimental design.
+
+
+```{r}
+# Fit the split-plot model
+model <- lm(Y ~ B + V + N + V:N, data = oats)
+
+# ANOVA table
+anova_table <- anova(model)
+print(anova_table)
+
+```
+
+Assuming hypotheses are met,
+
+A) does yield differ significantly by variety? 
+
+Since this p-value for the "V" term is 0.03665 which is less than the significance level, we reject the null hypothesis that the mean yields are the same across all varieties. This shows there is sufficient evidence to suggest that at least one variety has a significantly different mean yield compared to the others.
+
+B) does yield differ significantly by nitrogen level? 
+The p-value for the "N" term is 1.135e-10, which is extremely small therefore we reject the null hypothesis that the mean yields are the same across all nitrogen levels. This evidence suggests that there are significant differences in yield based on the nitrogen levels applied.
+
+
+C) does yield differ significantly by the interaction of variety and nitrogen level after accounting for the additive effects of variety and nitrogen level?
+The p-value for the "V:N" term is 0.97187, which is greater than the  significance level ,therefore we fail to reject the null hypothesis that there is no significant interaction effect between variety and nitrogen level on the yield of oats. This means that after considering the individual effects of variety and nitrogen level, the interaction effect between them is not statistically significant.
+
+
+## Question 2, part 3
+
+Suppose the data set `oats.b` constructed below from the data set `oats` is the data set of interest. Do the non-Normalities shown below make the inferences of the splitplot analysis unreliable? Please answer yes or no and provide reasoning or computation to support your conclusion.
+Yes, the non-normalities introduced by modifying the dataset do make the inferences from the split-plot analysis unreliable. The Shapiro-Wilk test results for normality on the modified data (oats.b) show extremely low p-values for each level of nitrogen  indicating strong evidence against the hypothesis of normality for the yield data across different nitrogen levels.Significant deviations in the Q-Q plots visually confirm the departure from normality, further supporting the Shapiro-Wilk test results.
+
+
+```{r}
+oats.b<-oats
+oats.b$Y[oats.b$B=="I"]<-oats.b$Y[oats.b$B=="I"]+100
+
+ggqqplot(data=oats.b,x="Y",facet.by = c("V","N"))
+
+oats.b%>%group_by(N)%>%summarize(pval=shapiro.test(Y)$p)
+
+```
+
+# Question 3
+
+### Question 3 Context
+
+The raw data on which the data in this question are based is the “Pew Research Center’s American Trends Panel” 
+American Trends Panel Wave 116
+Field dates: Oct. 10 – Oct. 16, 2022
+Topics: Politics timely and topical downloaded 4/12/2024 from https://www.pewresearch.org/religion/dataset/american-trends-panel-wave-116/
+
+The codebook was downloaded 4/12/2024 from https://www.pewresearch.org/wp-content/uploads/2018/05/Codebook-and-instructions-for-working-with-ATP-data.pdf 
+
+The goal of this question is to investigate whether people reporting different party affiliations generally view the integrity of election results differently. For this analysis, the responses to the election questions are used:
+
+VTADMIN_COM Do you think the elections this November in YOUR COMMUNITY will be run and administered…
+
+1 Very well
+
+2 Somewhat well
+
+3 Not too well
+
+4 Not at all well
+
+VTADMIN_US Do you think the elections this November in the UNITED STATES will be run and administered…
+
+1 Very well
+
+2 Somewhat well
+
+3 Not too well
+
+4 Not at all well
+
+VTCOUNT_INP How confident are you that votes cast IN PERSON AT POLLING PLACES across the United States will be counted as voters intend in the elections this November?
+
+1 Very confident
+
+2 Somewhat confident
+
+3 Not too confident
+
+4 Not at all confident
+
+VTCOUNT_ABS How confident are you that votes cast BY ABSENTEE OR MAIL-IN BALLOT across the United States will be counted as voters intend in the elections this November?
+
+1 Very confident
+
+2 Somewhat confident
+
+3 Not too confident
+
+4 Not at all confident
+
+The Pew Research Center provides sample weights in the variable "WEIGHT_W116". These weights have the effect of readjusting the proportions of demographic groups in the sample to be approximately the proportions in the target population when the responses are viewed as representing the number of people given by the weight. The weights add up to the number of responses in the study.
+
+The code below uses a data frame of the responses of 200 individuals on these questions. The individuals are a sample from the full response set with probability based on the weight. 
+
+
+
+## Question 3, part 1
+
+(5 points)
+
+Output of an ANOVA computation of the collected responses to the election integrity questions, labeled "disagree", using the political category "F_PARTY_FINAL" as the grouping variable is shown, along with visualizations and tests regarding Normality and equality of variance. There are several issues with this as a test of whether disagreement with the integrity of the election differs among reported party affiliations. Please address the issues of Normality, equal variance, and independence in the (ill-considered) analysis below. The code is intentionally very sparsely commented to promote consideration of the role each operation. 
+
+```{r}
+load("dat_sub.RData")
+
+dat.long<-pivot_longer(dat.sub,starts_with("VT"),names_to="issue",
+                       values_to="disagree")
+summary(aov(disagree~F_PARTY_FINAL,data=dat.long))
+
+dat.agg<-dat.long%>%group_by(F_PARTY_FINAL)%>%
+  summarize(mean.gp=mean(disagree),sd.gp=sd(disagree),ct=n())
+ggplot(dat.agg,aes(x=F_PARTY_FINAL,y=mean.gp))+geom_col(position = "dodge")+
+ geom_errorbar(aes(ymin=mean.gp-sd.gp/sqrt(ct),
+                   ymax=mean.gp+sd.gp/sqrt(ct)),width=.2)
+
+ggqqplot(dat.long,x="disagree",facet.by = c("F_PARTY_FINAL"))
+dat.long%>%group_by(F_PARTY_FINAL)%>%summarize(pval=shapiro.test(disagree)$p,stdev.gp=sd(disagree,na.rm=TRUE))
+
+leveneTest(dat.long$disagree,dat.long$F_PARTY_FINAL)
+
+straw.man<-aov(disagree~F_PARTY_FINAL, data=dat.long)
+summary(straw.man)
+
+TukeyHSD(straw.man)
+# p.adjust(p_values, "bonferroni") in stats package
+
+```
+
+A) Are the data consistent with the assumption of Normality within each group? Please answer yes or no and provide reasoning to support your conclusion.
+
+No, the data are not consistent with the assumption of normality within each group.The Q-Q plots show significant deviations from the straight line, confirming the violation of the normality assumption which is further supported by the very small p-values for all groups from the Shapiro_Wilk test.
+
+B) Are the data consistent with the assumption of equal variance within each group? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the data are consistent with the assumption of equal variance within each group.The high p-value (0.8912) from the Levene's test indicates that we fail to reject the null hypothesis of equal variances across groups. 
+
+C) Are the data consistent with the assumption of independence? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the data are consistent with the assumption of independence. There is no indication that the responses are related or dependent on each other.
+
+
+D) Does the ANOVA provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, given the low P value the ANOVA results suggests that there are significant differences in disagreement with the integrity of the election among the party affiliations. However, due to the violation of the normality assumption the ANOVA results should be interpreted with caution since this may affect the reliability of the results.
+
+E) Do the results of the Tukey HSD test provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the results of the Tukey HSD test provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations. However,  the results provided by the Tukey HSD test may not be entirely accurate due to the non-normality of the data. 
+
+## Question 3, part 2
+
+(5 points)
+
+The data constructed below replace the multiple ratings for each individual by a single total. Please run the assessments of Normality and the assessments of equal variance, the ANOVA, and Tukey's HSD with the resulting data set and interpret the results.
+
+```{r}
+total<-dplyr::select(dat.sub,starts_with("VT"))%>%rowSums()
+dat.sub<-cbind(dat.sub,total)
+
+# Assess Normality
+shapiro.test(dat.sub$total)
+
+# Assess Equal Variance
+leveneTest(dat.sub$total, dat.sub$F_PARTY_FINAL)
+
+# ANOVA
+straw.man_total <- aov(total ~ F_PARTY_FINAL, data = dat.sub)
+summary(straw.man_total)
+
+# Tukey's HSD
+tukey_total <- TukeyHSD(straw.man_total)
+tukey_total
+```
+
+
+
+
+A) Are the data consistent with the assumption of Normality within each group? Please answer yes or no and provide reasoning to support your conclusion.
+
+No, the data are not consistent with the assumption of Normality within each group. The Shapiro-Wilk test results in a p-value of 5.085e-08, indicating a significant departure from normality.
+ 
+B) Are the data consistent with the assumption of equal variance within each group? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the data are consistent with the assumption of equal variance within each group. The Levene's test for homogeneity of variance indicates that there is no significant difference in variances across the groups having a p-value > 0.05.
+
+C) Are the data consistent with the assumption of independence? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the data are consistent with the assumption of independence, assuming responses are independent within the sample
+
+D) Does the ANOVA provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the ANOVA provides meaningful information about the differences in disagreement with the integrity of the election among the party affiliations. The ANOVA results show a significant effect of political affiliation on the total disagreement score with a p-value of 0.000443, indicating that there are differences in the mean disagreement levels across the groups.However, due to the violation of the normality assumption the ANOVA results should be interpreted with caution since this may affect the reliability of the results.
+
+E) Do the results of the Tukey HSD test provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the results of the Tukey HSD test provide meaningful information about the differences in disagreement with the integrity of the election among the party affiliations. The Tukey HSD test reveals several significant pairwise differences, such as between Democrats and "Something else", and between Democrats and Independents.However, the Tukey HSD test should be interpreted with caution since it relies on the ANOVA results.
+
+##Question 3, part 3
+
+(5 points)
+
+Here, the Kruskal-Wallis test is used as a non-parametric alternative to the ANOVA. The code is provided below. Please interpret the results of the Kruskal-Wallis test and the pairwise Wilcoxon tests with Holm correction.
+
+```{r}
+
+ kruskal.total<-kruskal.test(total~F_PARTY_FINAL,data=dat.sub)
+ kruskal.total
+
+ dat.sub$F_PARTY_FINAL<-droplevels(dat.sub$F_PARTY_FINAL)
+ 
+ # Run pairwise Wilcoxon tests with Holm correction, a non-parametric alternative to Tukey HSD to control familywise error rate.
+ 
+ # function to perform the Wilcoxon test for each pair of levels of F_PARTY_FINAL in the vector x
+ 
+ wilcox.x<-function(x){
+   wilcox.test(total~F_PARTY_FINAL,data=dat.sub,subset=dat.sub$F_PARTY_FINAL %in% x)$p.value
+ }
+ 
+# pairwise Wilcoxon tests 
+ 
+ ps<-combn(levels(dat.sub$F_PARTY_FINAL),2,wilcox.x)
+ 
+# labels for the pairwise comparisons 
+ ps.labels<-combn(levels(dat.sub$F_PARTY_FINAL),2,function(x) paste(x,collapse=" vs. "))
+ 
+ dat.ps<-data.frame(labels=ps.labels,p=ps)
+ 
+# pairwise Wilcoxon tests with Holm correction
+ 
+ data.frame(labels=ps.labels,p.adj=p.adjust(ps,"holm"))
+
+```
+
+A) Does the Kruskal Wallis test provide evidence against the hypothesis that the distribution of the value of "total" doesn't by party affiliation?
+
+Yes, the Kruskal-Wallis test provides evidence against the hypothesis that the distribution of the value of "total" is the same across all party affiliations. This is indicated by the p-value of 0.0005109, which is below the typical significance level therefore we reject the null hypothesis.
+
+B) Do the results of the Holm-adjusted pairwise comparison indicate any statistically significant pairwise differences? Please answer yes or no and provide reasoning to support your conclusion.
+
+Yes, the Holm-adjusted pairwise comparisons indicate statistically significant differences between Democrats and Independents, as well as Democrats and those affiliating with "Something else." These results suggest that there are significant pairwise differences in the "total" values among these specific party affiliations.

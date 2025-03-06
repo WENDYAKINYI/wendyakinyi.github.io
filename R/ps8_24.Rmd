@@ -1,0 +1,460 @@
+---
+title: "Problem Set 8"
+author: "A. Wendy"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(GGally)
+library(ggpubr)
+library(lmtest)
+library(MASS)
+library(DescTools)
+library(glmnet)
+library(caret)
+```
+
+## Introduction
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Please turn in your work on Canvas. Your solution document should have your answers to the questions and should display the requested plots. Also, please upload the .RData file you generate. 
+
+Potentially helpful code has been included and may be uncommented to help you get started. 
+
+## Question 1
+
+The file "pew_data.RData" is constructed from the 2017 Pew Research Center Science and NewsSurvey, downloaded from https://www.journalism.org/datasets/2018/ on 4/16/2019. The site https://www.pewresearch.org/download-datasets/ has lots of interesting information. Note that some analyses of the surveys may require use of the weights provided with the data set.
+
+The Pew science news survey will be used in the context of modeling "BLAME" on a  collection of other responses. The interpretations of the variables are available in the codebook for the survey.
+
+The "BLAME" variable is the selection made in response to the following question.
+
+"Which of these do you think is the BIGGER problem when it comes to news about scientific research findings? [RANDOMIZE RESPONSE OPTIONS]
+
+1 The way news reporters cover scientific research findings
+
+2 The way science researchers publish or share their new research findings"
+
+The interpretations of the remaining variables are available in the codebook for the survey. Many of the variables are have ordered categorical responses given by numbers with 3-5 categories and, in some cases, categories for declined responses. For the purposes of this model-building effort, these will be treated as numeric variables. Such variables as explanatory variables are often used as categorical variables.
+
+After some data cleaning, the data set is restricted to complete cases. This limits generalization of the results to individuals who would provide responses to the selected variables.
+
+```{r}
+
+load("dat_science.RData")
+dat<-dat.science
+
+# This syntax allows a quick look at the variables' descriptions.
+attributes(dat$BLAME)$label
+attributes(dat$BLAME)$labels 
+
+# restrict to variables (I thought were) of interest
+nam.keep<-names(dat)[str_detect(names(dat),"TOPIC|SCIOFTEN|ENJOY|^SOURCE|KNOWLEDGE|SEEK|SNSUSE|SCIWHY|WHYNOT|NEWSJOB|NEWSFACTS|STORIES|SNSUSE|SNSFREQ|FOLLOW|FOLLOWANTI|SNSSCI|SNSSCIIMP|PROBSET|BLAME|IDEO|AGE|PPREG4|PPINCIMP|PPGENDER|PPETHM|PPEDUCAT")]
+
+#dat.trim<-dplyr::select(dat,all_of(nam.keep))
+# dat.trim<-dat.trim[dat.trim$BLAME>0,] # Drop non-responses in the outcome variable
+# dat.trim$BLAME<-(dat.trim$BLAME==1)*1 # 1: blame reporters, 0: blame scientists
+# dat.trim<-dplyr::select(dat.trim,-SCIWHY_f)# asked of a subset of respondents
+# 
+# na.ct<-lapply(dat.trim,function(x){sum(is.na(x))})# Identify variables with many NAs
+# # names(dat.trim)[na.ct>5]
+# # Replace NAs that have values that can be inferred from other variables
+# dat.trim$SNSFREQ[dat.trim$SNSUSE==2]<-5
+# dat.trim$FOLLOW[dat.trim$SNSUSE==2]<-2
+# dat.trim$FOLLOWANTI[dat.trim$SNSUSE==2]<-2
+# dat.trim$SNSSCI[dat.trim$SNSUSE==2]<-4
+# dat.trim$SNSSCIIMP[dat.trim$SNSSCI==4]<-4
+# 
+# # Continue with complete cases. This restricts generalization.
+# dat.trim<-drop_na(dat.trim)
+# 
+# level.ct<-lapply(dat.trim,function(x){length(unique(x))})
+# #names(dat.trim)[level.ct==2]
+# 
+# dat.trim<-mutate_all(dat.trim,function(x){x[x<0]<-NA;x})
+# dat.trim<-drop_na(dat.trim)
+# 
+# # Create an indicator for the response "6" in the NEWSFACTS variables.
+# # The value "6" codes "I don’t know enough about this type of source to rate."
+# newsdk<-dplyr::select(dat.trim,all_of(str_c("NEWSFACTS_",letters[1:9])))
+# names(newsdk)<-str_c(names(newsdk),"_dk")
+# newsdk<-mutate_all(newsdk,function(x){(x==6)*1})
+# dat.trim<-bind_cols(dat.trim,newsdk)
+# dat.trim$PPETHM<-factor(dat.trim$PPETHM)# Ethnic group
+# dat.trim$PPREG4<-factor(dat.trim$PPREG4) # region of the country
+# 
+
+
+#save(dat.trim,file="dat_trim.RData")
+load("dat_trim.RData")
+
+# Split into training and validation data, preserving proportions of the "BLAME" responses.
+
+set.seed(3456)
+trainIndex <- createDataPartition(dat.trim$BLAME, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+dat.train<-dat.trim[trainIndex,]
+dat.valid<-dat.trim[-trainIndex,]
+
+```
+
+
+The following fits a forward model for "BLAME" on all the variables.
+
+```{r cache=TRUE}
+
+nam<-setdiff(names(dat.train),"BLAME")
+
+m<-glm(BLAME~1,data=dat.train,family="binomial") 
+
+# Use stringr to avoid typing all the explanatory variables.
+fmla<-str_c("BLAME~",str_c(nam,collapse="+"))
+
+m.forward<-step(m,scope=fmla,direction = "forward" ,trace=0)
+
+save(m.forward,file="m_forward.RData")
+
+load("m_forward.RData")
+#summary(m.forward)
+```
+
+The variables added in the full forward model are captured in the variable "var.forward".
+
+
+
+```{r}
+nrow(m.forward$anova)-1
+
+var.forward<-m.forward$anova[,1]
+var.forward<-str_replace(var.forward,"\\+ ","")
+var.forward<-var.forward[-1]
+
+```
+
+## Question 1, part 1
+
+(5 points)
+
+Please calculate the deviance on "dat.valid" of the model "m.forward" fit above. 
+
+```{r}
+
+forward.pred.valid<-predict(m.forward,newdata=dat.valid,type = "response")
+
+dev.get<-function(obs,pred){
+  -2*sum(obs*log(pred)+
+         (1-obs)*log(1-pred))
+}
+
+
+forward.dev<-dev.get(dat.valid$BLAME, forward.pred.valid)
+
+
+
+# Create a named vector to store the validation deviances. Enter the forward deviance.
+dev.record<-c(forward=forward.dev)
+print(dev.record)
+```
+
+
+## Q1, part 2
+
+(10 points)
+
+Please use "cv.glmnet" fit a cross-validated ridge logistic regression model of "BLAME" on the remaining variables on "dat.train". Please show the plot of the cross-validation deviances.
+
+
+
+```{r cache=TRUE}
+X<-model.matrix(BLAME~.,data=dat.trim)
+X<-X[,-1]
+y<-dat.trim$BLAME
+
+X.train<-X[trainIndex,]
+y.train<-y[trainIndex]
+X.valid<-X[-trainIndex,]
+
+set.seed(123456)
+cvfit.ridge <- cv.glmnet(x = X.train, y = y.train, alpha = 0, family = "binomial")
+
+# Plot the cross-validation deviances
+plot(cvfit.ridge)
+
+
+```
+
+## Q1, part 3
+
+(5 points)
+
+Please give the validation deviance of the fitted models at the values of $\lambda$ designated as "lambda.min" and lambda.1se" by "cv.glmnet". 
+
+```{r}
+
+ridge.pred.min.valid<-predict(cvfit.ridge,X.valid,cvfit.ridge$lambda.min,type = "response")
+ridge.pred.1se.valid<- predict(cvfit.ridge, X.valid, s = cvfit.ridge$lambda.1se, type = "response")
+# Calculate the validation deviance for the models at lambda.min and lambda.1se
+ridge.min.dev <- dev.get(dat.valid$BLAME, ridge.pred.min.valid)
+ridge.1se.dev <- dev.get(dat.valid$BLAME, ridge.pred.1se.valid)
+
+#update dev.record
+dev.record<-c(dev.record,ridge.min=ridge.min.dev,ridge.1se=ridge.1se.dev)
+
+# Print the dev.record
+print(dev.record)
+
+```
+
+## Q1, part 4
+
+(10 points)
+
+Please use "cv.glmnet" to fit a cross-validated lasso logistic regression model of "BLAME" on the remaining variables on "dat.train". Please show the plot of the cross-validation deviances. Please show the variables that have non-zero coefficients at the value of $\lambda$ designated as "lambda.1se" by "cv.glmnet"? 
+
+```{r cache=TRUE}
+
+set.seed(123456)
+# Fit a cross-validated lasso logistic regression model 
+cvfit.lasso <- cv.glmnet(x = X.train, y = y.train, alpha = 1, family = "binomial")
+
+# Plot the cross-validation deviances
+plot(cvfit.lasso)
+
+
+coeffs<-coef(cvfit.lasso, s = "lambda.1se")[,1]
+
+# Convert the sparse matrix to a regular matrix
+coeffs_matrix <- as.matrix(coeffs)
+# restrict to non-zero coefficients and display the names of the variables
+non_zero_indices <- which(coeffs_matrix != 0)
+non_zero_coeffs <- coeffs_matrix[non_zero_indices]
+non_zero_vars <- rownames(coeffs_matrix)[non_zero_indices]
+
+# Display the non-zero coefficients and their variable names
+print(non_zero_vars)
+print(non_zero_coeffs)
+```
+
+
+## Q1, part 5
+
+(5 points)
+
+Please give the deviance of the fitted lasso models at the values of $\lambda$ designated as "lambda.min" and lambda.1se" by "cv.glmnet".
+
+```{r}
+
+# update dev.record
+# dev.record<-
+
+# Predict on the validation set using the model at lambda.min
+lasso.pred.min.valid <- predict(cvfit.lasso, X.valid, s = cvfit.lasso$lambda.min, type = "response")
+
+# Predict on the validation set using the model at lambda.1se
+lasso.pred.1se.valid <- predict(cvfit.lasso, X.valid, s = cvfit.lasso$lambda.1se, type = "response")
+
+
+# Calculate the validation deviance for the models at lambda.min and lambda.1se
+lasso.min.dev <- dev.get(dat.valid$BLAME, lasso.pred.min.valid)
+lasso.1se.dev <- dev.get(dat.valid$BLAME, lasso.pred.1se.valid)
+
+# Update the dev.record
+dev.record <- c(dev.record, lasso.min = lasso.min.dev, lasso.1se = lasso.1se.dev)
+
+# Print the updated dev.record
+print(dev.record)
+
+```
+
+## Q1, part 6
+
+(5 points)
+
+Please show the variables that are in the lasso model at "lambda.min" but not in the forward model and the variables that are in the forward model but not in the lasso model at "lambda.min".
+
+```{r}
+# Extract variable names from the forward model
+forward_vars <- names(coef(m.forward))
+# This code shows variables in the lasso model at lambda.min but not in lasso model at lambda.1se
+coeffs.min<-coef(cvfit.lasso, s = "lambda.min")[,1]
+coeffs.min.names<-names(coeffs.min[coeffs.min!=0])
+
+# Find variables in the lasso model at lambda.min but not in the forward model
+vars_in_lasso_not_in_forward <- setdiff(coeffs.min.names, forward_vars)
+
+# Find variables in the forward model but not in the lasso model at lambda.min
+vars_in_forward_not_in_lasso <- setdiff(forward_vars, coeffs.min.names)
+
+# Print results
+print("Variables in Lasso at lambda.min but not in Forward Model:")
+print(vars_in_lasso_not_in_forward)
+
+print("Variables in Forward Model but not in Lasso at lambda.min:")
+print(vars_in_forward_not_in_lasso)
+
+
+```
+
+
+## Q1, part 7
+
+(5 points)
+
+Which of the models, the forward model, the ridge model at "lambda.min", the ridge model at "lambda.1se", the lasso model at "lambda.min", or the lasso model at "lambda.1se" has the smallest deviance on the validation data? 
+
+Based on the deviance values, the Ridge Model at "lambda.min" with a deviance of 661.0286 has the lowest deviance
+
+```{r}
+
+dev.record <- c(
+  forward = 671.5001,
+  ridge.min = 661.0286,
+  ridge.1se = 674.7032,
+  lasso.min = 662.0914,
+  lasso.1se = 675.2442
+)
+
+# Find the model with the smallest deviance
+min_deviance_model <- names(which.min(dev.record))
+min_deviance_value <- min(dev.record)
+
+# Print the model with the smallest deviance
+cat("The model with the smallest deviance on the validation data is:", min_deviance_model, "with a deviance of", min_deviance_value, "\n")
+
+```
+
+
+# Question 2
+
+Discussion of the ridge and lasso regression methods may focus on the case in which the variables are centered to have mean equal to 0 and $\beta_0$ is assumed to equal 0. This question first works through the relationship between ridge models for variables that differ by additive constants and the relationship between lasso models for variables that differ by additive constants. The second part is a proof that if all variables in the model have sample means equal to 0 then the fitted value $\hat{\beta}_0$ equals 0.
+
+## Q2, part 1
+
+(5 points)
+
+Consider two sets of $n$-vectors $\left(\boldsymbol y,\boldsymbol X_1,...\boldsymbol X_p\right)$ and $\left(\boldsymbol z,\boldsymbol W_1,...\boldsymbol W_p\right)$
+related by $\boldsymbol y+\boldsymbol a=\boldsymbol z$ and $\boldsymbol X_j+\boldsymbol c_j=\boldsymbol W_j$, $i\in \{1,...p\}$ where $\boldsymbol a=<a,a,...a>$ and the $\boldsymbol c_j=<c_j,c_j,...c_j>$ are constant vectors. 
+
+Let $\boldsymbol b=<b_0,b_1,...b_p>$ be the value that solves 
+$$\begin{array}{c}
+argmin\\
+\boldsymbol{\mathbf{\beta}}
+\end{array}\left[ \sum_{i=1}^n\left(y_i-\beta_0-\sum_{j=1}^pX_{ij}\beta_j\right)+\lambda\sum_{j=1}^p\beta_j^2\right]$$
+
+Denote $\sum_{i=1}^n\left(y_i-b_0-\sum_{j=1}^pX_{ij}b_j\right)+\lambda\sum_{j=1}^pb_j^2=min_y$. 
+
+Let $\boldsymbol g=<g_0,g_1,...g_p>$ be the value that solves 
+$$\begin{array}{c}
+argmin\\
+\boldsymbol{\mathbf{\gamma}}
+\end{array}\left[ \sum_{i=1}^n\left(z_i-\gamma_0-\sum_{j=1}^pW_{ij}\gamma_j\right)+\lambda\sum_{j=1}^p\gamma_j^2\right]$$
+
+Denote $\sum_{i=1}^n\left(z_i-g_0-\sum_{j=1}^pW_{ij}g_j\right)+\lambda\sum_{j=1}^pg_j^2=min_z$. 
+
+Please prove that $<b_1,...b_p>=<g_1,...g_p>$, that $g_0=b_0+a-\sum_{j=1}^pc_jb_j$ and that $min_y=min_z$. 
+
+Suggestion: Show that taking $\mathbf{\gamma}=<b_0+a-\sum_{j=1}^pc_jb_j,b_1,...b_p>$
+shows that $\sum_{i=1}^n\left(z_i-g_0-\sum_{j=1}^pW_{ij}g_j\right)+\lambda\sum_{j=1}^pg_j^2=min_z\leq$
+$\sum_{i=1}^n\left(z_i-\gamma_0-\sum_{j=1}^pW_{ij}\gamma_j\right)+\lambda\sum_{j=1}^p\gamma_j^2\leq min_y$. 
+
+By reversing the roles of $\left(\boldsymbol y,\boldsymbol X_1,...\boldsymbol X_p\right)$ and $\left(\boldsymbol z,\boldsymbol W_1,...\boldsymbol W_p\right)$, you can show that $min_y\leq min_z$. 
+
+(This argument can also be used for the lasso definition.)
+
+###Proofs: 1
+
+$<b_1, ..., b_p> = <g_1, ..., g_p>$
+
+Since $\boldsymbol b$ solves the ridge regression problem for $\boldsymbol y$ and $\boldsymbol g$ solves the ridge regression problem for $\boldsymbol z$, the coefficients should be the same for both datasets which implies that $<b_1, ..., b_p> = <g_1, ..., g_p>$.
+
+###Proofs:2
+$g_0 = b_0 + a - \sum_{j=1}^p c_j b_j$
+
+
+Since $\boldsymbol b$ solves the ridge regression problem for $\boldsymbol y$;
+
+Ridge regression problem for $\boldsymbol y$: $$ \sum_{i=1}^n\left(y_i - b_0 - \sum_{j=1}^p X_{ij} b_j\right)^2 + \lambda \sum_{j=1}^p b_j^2 = \text{min}_y $$
+
+Ridge regression problem for $\boldsymbol z$: $$ \sum_{i=1}^n\left(z_i - g_0 - \sum_{j=1}^p W_{ij} g_j\right)^2 + \lambda \sum_{j=1}^p g_j^2 = \text{min}_z $$
+
+Substituting; $$(\boldsymbol{z} = \boldsymbol{y} + \boldsymbol{a}) and (\boldsymbol{W}j = \boldsymbol{X}j + \boldsymbol{c}j): [ \sum{i=1}^n \left( (y_i + a) - g_0 - \sum{j=1}^p (X{ij} + c_j) g_j \right)^2 + \lambda \sum_{j=1}^p g_j^2 = \text{min}_z ]$$
+
+Expanding the terms: $$[ \sum_{i=1}^n \left( y_i + a - g_0 - \sum_{j=1}^p X_{ij} g_j - \sum_{j=1}^p c_j g_j \right)^2 + \lambda \sum_{j=1}^p g_j^2 = \text{min}_z ]$$
+
+Since  $( g_j = b_j )$ for $( j = 1, ..., p )$, we can substitute $( g_j )$ with $( b_j )$: $[ \sum_{i=1}^n \left( y_i + a - g_0 - \sum_{j=1}^p X_{ij} b_j - \sum_{j=1}^p c_j b_j \right)^2 + \lambda \sum_{j=1}^p b_j^2 = \text{min}_z ]$
+
+and since $g_0 = b_0 + a - \sum_{j=1}^p c_j b_j$.
+
+Substituting $( g_0)$ into the equation:
+ $[ \sum_{i=1}^n \left( y_i + a - (b_0 + a - \sum_{j=1}^p c_j b_j) - \sum_{j=1}^p X_{ij} b_j - \sum_{j=1}^p c_j b_j \right)^2 + \lambda \sum_{j=1}^p b_j^2 = \text{min}_z ]$
+ 
+Simplifying the terms: $[ \sum_{i=1}^n \left( y_i - b_0 - \sum_{j=1}^p X_{ij} b_j \right)^2 + \lambda \sum_{j=1}^p b_j^2 = \text{min}_z ]$
+ 
+This expression is identical to the ridge regression problem for $(\boldsymbol{y}): [ \sum_{i=1}^n \left( y_i - b_0 - \sum_{j=1}^p X_{ij} b_j \right)^2 + \lambda \sum_{j=1}^p b_j^2 = \text{min}_y ]$
+
+Therefore;$ [ g_0 = b_0 + a - \sum_{j=1}^p c_j b_j ]$
+
+###Proofs:3
+
+By comparing the expressions for $min_y$ and $min_z$, we can see that $min_z \leq min_y$.By reversing the roles of $\boldsymbol y$ and $\boldsymbol z$, we can also see that $min_y \leq min_z$.
+
+## Q3, part 2
+
+(0 points)
+
+This question is intended to satisfy the curiosity of the interested student. It is not for credit.
+
+Show that if $\left(\boldsymbol y,\boldsymbol X_1,...\boldsymbol X_p\right)$ satisfies the properties that $\bar{y}=\frac{1}{n}\sum_{i=1}^ny_i=0$ and $\bar{X}_j=\frac{1}{n}\sum_{i=1}^n X_{ij}=0$ for $j\in \{1,...p\}$ then the value $\boldsymbol b=<b_0,b_1,...b_p>$ that solves 
+$$\begin{array}{c}
+argmin\\
+\boldsymbol{\mathbf{\beta}}
+\end{array}\left[ \sum_{i=1}^n\left(y_i-\beta_0-\sum_{j=1}^pX_{ij}\beta_j\right)+\lambda\sum_{j=1}^p\beta_j^2\right]$$
+has $b_0=0$.
+
+Suggestion: You can modify the argument in "multiple_regression_significance(1).pdf" that shows $\sum \left( y_i-\hat{y}_i\right)=0$ (5 points)
+
+Proof (by contradiction):
+
+Set $\hat{y}_{i}=b_0+\sum_{j=1}^pX_{ij}b_j$. Note that 
+
+$\sum\left(y_{i}-\hat{y}_{i}\right)$
+
+$=n\bar{y}-nb_0-\sum_{i=1}^n\sum_{j=1}^pX_{ij}b_j$
+
+$=-nb_0-\sum_{j=1}^p\sum_{i=1}^nX_{ij}b_j$
+
+$=-nb_0-\sum_{j=1}^pn\bar{X}_{i}b_j$
+
+$=-nb_0$
+
+Consequently, this problem reduces to showing that $\sum \left( y_i-\hat{y}_i\right)=0$
+
+Suppose $\sum\left(y_{i}-\hat{y}_{i}\right)=nc\neq0$.
+
+Then $\sum\left(y_{i}-\hat{y}_{i}\right)^{2}=\sum\left[\left(\left(y_{i}-\hat{y}_{i}\right)-c\right)+c\right]^{2}$
+
+$=\sum\left[\left(y_{i}-\hat{y}_{i}\right)-c\right]^{2}+2c\sum\left[\left(y_{i}-\hat{y}_{i}\right)-c\right]+nc^{2}$
+
+$=\sum\left[\left(y_{i}-\hat{y}_{i}\right)-c\right]^{2}+2c\left[\sum\left(y_{i}-\hat{y}_{i}\right)-nc\right]+nc^{2}$
+
+$\sum\left[\left(y_{i}-\hat{y}_{i}\right)-c\right]^{2}+nc^{2}$.
+
+Thus $\sum\left(y_{i}-\hat{y}_{i}\right)^2=\sum\left[\left(y_{i}-\hat{y}_{i}\right)-c\right]^{2}+nc^{2}$. This implies that $\sum\left(y_{i}-\hat{y}_{i}-c\right)^{2}<\sum\left(y_{i}-\hat{y}_{i}\right)^{2}$
+
+Conclude that if $\sum\left(y_{i}-\hat{y}_{i}\right)=nc\neq0$, then, setting $\boldsymbol{c}=<b_0+\frac{c}{n},b_1,...b_p>$,
+
+$$\sum_{i=1}^n\left(y_i-c_0-\sum_{j=1}^pX_{ij}c_j\right)=\sum\left(y_{i}-\hat{y}_{i}-c\right)^{2}<\sum\left(y_{i}-\hat{y}_{i}\right)^{2}=\sum_{i=1}^n\left(y_i-b_0-\sum_{j=1}^pX_{ij}b_j\right)$$
+while $\sum_{j=1}^pc_j=\sum_{j=1}^pb_j$. This contradicts the definition of $\boldsymbol{b}$ as the value that minimizes
+
+$$ \sum_{i=1}^n\left(y_i-\beta_0-\sum_{j=1}^pX_{ij}\beta_j\right)+\lambda\sum_{j=1}^p\beta_j^2$$
+Conclude $b_0=0$.
+
+
+

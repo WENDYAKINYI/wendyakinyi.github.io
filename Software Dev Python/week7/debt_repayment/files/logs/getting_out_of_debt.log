@@ -1,0 +1,271 @@
+2024-03-04 15:54:03 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-04 15:54:03 - INFO - AmortizationTable: Creating the amortized table
+2024-03-04 16:05:40 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-04 16:05:40 - INFO - AmortizationTable: Creating the amortized table
+2024-03-04 16:31:57 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-04 16:31:57 - INFO - AmortizationTable: Creating the amortized table
+2024-03-04 18:11:33 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-04 18:11:33 - INFO - AmortizationTable: Creating the amortized table
+2024-03-04 18:12:32 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-04 18:12:32 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:18:30 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:18:30 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:38:58 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:38:58 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:43:51 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:43:51 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:47:49 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:47:49 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:49:59 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:49:59 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:53:21 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:53:21 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:55:57 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:55:57 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:56:44 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 06:56:44 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 06:56:56 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: 20000.0
+2024-03-05 06:56:56 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 286.94
+2024-03-05 06:56:56 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=1508.94, loan_balance=0.0
+2024-03-05 06:56:56 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:29 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: 0.0
+2024-03-05 07:02:29 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 1508.94
+2024-03-05 07:02:29 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=2730.94, loan_balance=-20000.0
+2024-03-05 07:02:29 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:33 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -20000.0
+2024-03-05 07:02:33 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 2730.94
+2024-03-05 07:02:33 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=3952.94, loan_balance=-40000.0
+2024-03-05 07:02:33 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:36 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -40000.0
+2024-03-05 07:02:36 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 3952.94
+2024-03-05 07:02:36 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=5174.9400000000005, loan_balance=-60000.0
+2024-03-05 07:02:36 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:37 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -60000.0
+2024-03-05 07:02:37 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 5174.9400000000005
+2024-03-05 07:02:37 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=6396.9400000000005, loan_balance=-80000.0
+2024-03-05 07:02:37 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:37 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -80000.0
+2024-03-05 07:02:37 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 6396.9400000000005
+2024-03-05 07:02:37 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=7618.9400000000005, loan_balance=-100000.0
+2024-03-05 07:02:37 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:39 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -100000.0
+2024-03-05 07:02:39 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 7618.9400000000005
+2024-03-05 07:02:39 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=8840.94, loan_balance=-120000.0
+2024-03-05 07:02:39 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:40 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -120000.0
+2024-03-05 07:02:40 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 8840.94
+2024-03-05 07:02:40 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=10062.94, loan_balance=-140000.0
+2024-03-05 07:02:40 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:41 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -140000.0
+2024-03-05 07:02:41 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 10062.94
+2024-03-05 07:02:41 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=11284.94, loan_balance=-160000.0
+2024-03-05 07:02:41 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:42 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -160000.0
+2024-03-05 07:02:42 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 11284.94
+2024-03-05 07:02:42 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=12506.94, loan_balance=-180000.0
+2024-03-05 07:02:42 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:43 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -180000.0
+2024-03-05 07:02:43 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 12506.94
+2024-03-05 07:02:43 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=13728.94, loan_balance=-200000.0
+2024-03-05 07:02:43 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:43 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -200000.0
+2024-03-05 07:02:43 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 13728.94
+2024-03-05 07:02:43 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=14950.94, loan_balance=-220000.0
+2024-03-05 07:02:43 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:44 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -220000.0
+2024-03-05 07:02:44 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 14950.94
+2024-03-05 07:02:44 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=16172.94, loan_balance=-240000.0
+2024-03-05 07:02:44 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:44 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -240000.0
+2024-03-05 07:02:44 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 16172.94
+2024-03-05 07:02:44 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=17394.940000000002, loan_balance=-260000.0
+2024-03-05 07:02:44 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:45 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -260000.0
+2024-03-05 07:02:45 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 17394.940000000002
+2024-03-05 07:02:45 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=18616.940000000002, loan_balance=-280000.0
+2024-03-05 07:02:45 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -280000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 18616.940000000002
+2024-03-05 07:02:46 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=19838.940000000002, loan_balance=-300000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -300000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 19838.940000000002
+2024-03-05 07:02:46 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=21060.940000000002, loan_balance=-320000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -320000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 21060.940000000002
+2024-03-05 07:02:46 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=22282.940000000002, loan_balance=-340000.0
+2024-03-05 07:02:46 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -340000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 22282.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=23504.940000000002, loan_balance=-360000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -360000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 23504.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=24726.940000000002, loan_balance=-380000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -380000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 24726.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=25948.940000000002, loan_balance=-400000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -400000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 25948.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=27170.940000000002, loan_balance=-420000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -420000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 27170.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=28392.940000000002, loan_balance=-440000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -440000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 28392.940000000002
+2024-03-05 07:02:47 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=29614.940000000002, loan_balance=-460000.0
+2024-03-05 07:02:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -460000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 29614.940000000002
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=30836.940000000002, loan_balance=-480000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -480000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 30836.940000000002
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=32058.940000000002, loan_balance=-500000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -500000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 32058.940000000002
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=33280.94, loan_balance=-520000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -520000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 33280.94
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=34502.94, loan_balance=-540000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -540000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 34502.94
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=35724.94, loan_balance=-560000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -560000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 35724.94
+2024-03-05 07:02:48 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=36946.94, loan_balance=-580000.0
+2024-03-05 07:02:48 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:49 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -580000.0
+2024-03-05 07:02:49 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 36946.94
+2024-03-05 07:02:49 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=38168.94, loan_balance=-600000.0
+2024-03-05 07:02:49 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:49 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -600000.0
+2024-03-05 07:02:49 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 38168.94
+2024-03-05 07:02:49 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=39390.94, loan_balance=-620000.0
+2024-03-05 07:02:49 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:02:50 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: -620000.0
+2024-03-05 07:02:50 - INFO - AmortizationTable: Applying extra monthly payment: 1222.0, Current monthly payment before update: 39390.94
+2024-03-05 07:02:50 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=40612.94, loan_balance=-640000.0
+2024-03-05 07:02:50 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:13:58 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 07:13:58 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:14:00 - INFO - AmortizationTable: Applying lump sum payment: 2000.0, Current loan balance before payment: 20000.0
+2024-03-05 07:14:00 - INFO - AmortizationTable: Applying extra monthly payment: 1200.0, Current monthly payment before update: 222.04
+2024-03-05 07:14:00 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=1422.04, loan_balance=18000.0
+2024-03-05 07:14:00 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:14:07 - INFO - AmortizationTable: Applying lump sum payment: 2000.0, Current loan balance before payment: 18000.0
+2024-03-05 07:14:07 - INFO - AmortizationTable: Applying extra monthly payment: 1200.0, Current monthly payment before update: 1422.04
+2024-03-05 07:14:07 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=2622.04, loan_balance=16000.0
+2024-03-05 07:14:07 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:15:42 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 07:15:42 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:15:45 - INFO - AmortizationTable: Applying lump sum payment: 2000.0, Current loan balance before payment: 20000.0
+2024-03-05 07:15:45 - INFO - AmortizationTable: Applying extra monthly payment: 1200.0, Current monthly payment before update: 222.04
+2024-03-05 07:15:45 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=1422.04, loan_balance=18000.0
+2024-03-05 07:15:45 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:24:20 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 07:24:20 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 07:24:22 - INFO - AmortizationTable: Applying lump sum payment: 20000.0, Current loan balance before payment: 20000.0
+2024-03-05 07:24:22 - INFO - AmortizationTable: Applying extra monthly payment: 200.0, Current monthly payment before update: 202.49
+2024-03-05 07:24:22 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=402.49, loan_balance=0.0
+2024-03-05 07:24:22 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 16:10:15 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 16:10:15 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 16:10:56 - INFO - AmortizationTable: Applying lump sum payment: 2888.0, Current loan balance before payment: 35677.0
+2024-03-05 16:10:56 - INFO - AmortizationTable: Applying extra monthly payment: 34.0, Current monthly payment before update: 11991.57
+2024-03-05 16:10:56 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=12025.57, loan_balance=32789.0
+2024-03-05 16:10:56 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 16:11:59 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 16:11:59 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 16:12:07 - INFO - AmortizationTable: Applying lump sum payment: 34.0, Current loan balance before payment: 23888.0
+2024-03-05 16:12:07 - INFO - AmortizationTable: Applying extra monthly payment: 34.0, Current monthly payment before update: 248.61
+2024-03-05 16:12:07 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=282.61, loan_balance=23854.0
+2024-03-05 16:12:07 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 19:14:47 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 19:14:47 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 19:33:39 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 19:33:39 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:25:02 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 20:25:02 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:28:21 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 20:28:21 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:28:45 - INFO - AmortizationTable: Applying lump sum payment: 24.0, Current loan balance before payment: 2000.0
+2024-03-05 20:28:45 - INFO - AmortizationTable: Applying extra monthly payment: 23.0, Current monthly payment before update: 19.31
+2024-03-05 20:28:45 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=42.31, loan_balance=1976.0
+2024-03-05 20:28:45 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:36:20 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 20:36:20 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:36:27 - INFO - AmortizationTable: Applying lump sum payment: 34.0, Current loan balance before payment: 243555.0
+2024-03-05 20:36:27 - INFO - AmortizationTable: Applying extra monthly payment: 25.0, Current monthly payment before update: 20850.13
+2024-03-05 20:36:27 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=20875.13, loan_balance=243521.0
+2024-03-05 20:36:27 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:53:51 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-05 20:53:51 - INFO - AmortizationTable: Creating the amortized table
+2024-03-05 20:54:13 - INFO - AmortizationTable: Applying lump sum payment: 342.0, Current loan balance before payment: 23456.0
+2024-03-05 20:54:13 - INFO - AmortizationTable: Applying extra monthly payment: 33.0, Current monthly payment before update: 2262.43
+2024-03-05 20:54:13 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=2295.43, loan_balance=23114.0
+2024-03-05 20:54:13 - INFO - AmortizationTable: Creating the amortized table
+2024-03-06 16:18:22 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-06 16:18:22 - INFO - AmortizationTable: Creating the amortized table
+2024-03-06 16:18:30 - INFO - AmortizationTable: Applying lump sum payment: 45.0, Current loan balance before payment: 200000.0
+2024-03-06 16:18:30 - INFO - AmortizationTable: Applying extra monthly payment: 34.0, Current monthly payment before update: 2311.87
+2024-03-06 16:18:30 - INFO - AmortizationTable: Updated loan repayment details: monthly_payment=2345.87, loan_balance=199955.0
+2024-03-06 16:18:30 - INFO - AmortizationTable: Creating the amortized table
+2024-03-06 16:19:51 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-06 16:19:51 - DEBUG - AmortizationTable: Instantiating AmortizedTable Class
+2024-03-06 16:19:51 - INFO - AmortizationTable: Creating the amortized table
+2024-03-06 16:19:51 - INFO - AmortizationTable: Creating the amortized table
+2024-03-06 17:29:13 - DEBUG - AmortizationTable - 10: Instantiating AmortizedTable Class
+2024-03-06 17:29:13 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 17:29:30 - INFO - AmortizationTable - 93: Applying lump sum payment: 230.0, Current loan balance before payment: 3000.0
+2024-03-06 17:29:30 - INFO - AmortizationTable - 101: Applying extra monthly payment: 23.0, Current monthly payment before update: 254.08
+2024-03-06 17:29:30 - INFO - AmortizationTable - 112: Updated loan repayment details: monthly_payment=277.08000000000004, loan_balance=2770.0
+2024-03-06 17:29:30 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 17:29:55 - DEBUG - AmortizationTable - 10: Instantiating AmortizedTable Class
+2024-03-06 17:29:55 - DEBUG - AmortizationTable - 10: Instantiating AmortizedTable Class
+2024-03-06 17:29:55 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 17:29:55 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 17:29:57 - INFO - AmortizationTable - 93: Applying lump sum payment: 230.0, Current loan balance before payment: 3000.0
+2024-03-06 17:29:57 - INFO - AmortizationTable - 93: Applying lump sum payment: 230.0, Current loan balance before payment: 3000.0
+2024-03-06 17:29:57 - INFO - AmortizationTable - 101: Applying extra monthly payment: 23.0, Current monthly payment before update: 191.51
+2024-03-06 17:29:57 - INFO - AmortizationTable - 101: Applying extra monthly payment: 23.0, Current monthly payment before update: 191.51
+2024-03-06 17:29:57 - INFO - AmortizationTable - 112: Updated loan repayment details: monthly_payment=214.51, loan_balance=2770.0
+2024-03-06 17:29:57 - INFO - AmortizationTable - 112: Updated loan repayment details: monthly_payment=214.51, loan_balance=2770.0
+2024-03-06 17:29:57 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 17:29:57 - INFO - AmortizationTable - 20: Creating the amortized table
+2024-03-06 20:16:51 - DEBUG - AmortizationTable - 58: Instantiating AmortizedTable Class
+2024-03-06 20:16:51 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:16:59 - INFO - AmortizationTable - 178: Applying lump sum payment: 50.0, Current loan balance before payment: 20000.0
+2024-03-06 20:16:59 - INFO - AmortizationTable - 186: Applying extra monthly payment: 50.0, Current monthly payment before update: 216.81
+2024-03-06 20:16:59 - INFO - AmortizationTable - 197: Updated loan repayment details: monthly_payment=266.81, loan_balance=19950.0
+2024-03-06 20:16:59 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:24:41 - DEBUG - AmortizationTable - 58: Instantiating AmortizedTable Class
+2024-03-06 20:24:41 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:24:49 - INFO - AmortizationTable - 178: Applying lump sum payment: 50.0, Current loan balance before payment: 20000.0
+2024-03-06 20:24:49 - INFO - AmortizationTable - 186: Applying extra monthly payment: 50.0, Current monthly payment before update: 222.04
+2024-03-06 20:24:49 - INFO - AmortizationTable - 197: Updated loan repayment details: monthly_payment=272.03999999999996, loan_balance=19950.0
+2024-03-06 20:24:49 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:26:25 - DEBUG - AmortizationTable - 58: Instantiating AmortizedTable Class
+2024-03-06 20:26:25 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:26:35 - INFO - AmortizationTable - 178: Applying lump sum payment: 50.0, Current loan balance before payment: 20000.0
+2024-03-06 20:26:35 - INFO - AmortizationTable - 186: Applying extra monthly payment: 50.0, Current monthly payment before update: 222.04
+2024-03-06 20:26:35 - INFO - AmortizationTable - 197: Updated loan repayment details: monthly_payment=272.03999999999996, loan_balance=19950.0
+2024-03-06 20:26:35 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:27:31 - DEBUG - AmortizationTable - 58: Instantiating AmortizedTable Class
+2024-03-06 20:27:31 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 20:27:40 - INFO - AmortizationTable - 178: Applying lump sum payment: 50.0, Current loan balance before payment: 20000.0
+2024-03-06 20:27:40 - INFO - AmortizationTable - 186: Applying extra monthly payment: 50.0, Current monthly payment before update: 222.04
+2024-03-06 20:27:40 - INFO - AmortizationTable - 197: Updated loan repayment details: monthly_payment=272.03999999999996, loan_balance=19950.0
+2024-03-06 20:27:40 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 21:30:41 - DEBUG - AmortizationTable - 58: Instantiating AmortizedTable Class
+2024-03-06 21:30:41 - INFO - AmortizationTable - 71: Creating the amortized table
+2024-03-06 21:30:50 - ERROR - AmortizationTable - 172: Unable to update loan and payments due to missing values.

@@ -1,0 +1,158 @@
+---
+title: "Problem Set 2"
+subtitle: "Applications of Sampling to Inference"
+author: "W. Akinyi"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(HistData)
+library(dplyr)
+library(ggplot2)
+```
+
+# Introduction
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please generate your solutions in R markdown and upload both a knitted doc, docx, or pdf document in addition to the Rmd file.
+Please put your name in the "author" section in the header.
+
+For this assignment, please do all calculations in R and show the code and the results in the knitted document.
+
+
+
+
+# Question 1
+(10 points)
+
+## Context
+
+In class we implemented the idea that populations in the `Vaccinated` and `Placebo` groups in the `RandomizedControl` experiment were the same in regards to paralytic polio cases by using the `rbinom` function to assign paralytic polio cases in the combined `Vaccinated` and `Placebo` groups of the `RandomizedControl` experiment to the `Vaccinated` group with probability equal to the ratio of the size of the `Vaccinated` group to the size of pooled `Vaccinated` and `Placebo` groups.
+
+This models the idea that the participants were assigned independently to the `Vaccinated` and `Placebo` groups with an approximately equal probability of assignment to each group. Picture the researchers tossing a fair coin for each participant to determine whether the participant is assigned to the `Vaccinated` or `Placebo` group.
+
+Note that the function `rbinom(x,size,prob)` simulates drawing `x` random samples from `Binom(size,prob)`, a probability distribution that models the number of successes in `size` independent trials, each with probability of success `prob`. 
+
+The following code examines the distribution of absolute value of the differences in size between that two groups that occur under this model of assignment to the `Vaccinated` and `Placebo` groups.
+
+
+```{r}
+data("PolioTrials")
+dat<-PolioTrials
+
+n<-10000 # number of simulations
+obs.diff<-abs(dat$Population[1]-dat$Population[2]) # observed absolute difference in the group sizes 
+
+# Calculate the total number in the two groups.
+ct<-sum(dat$Population[1:2])
+
+set.seed(45678765)
+sim<-rbinom(n,ct,.5) # simulate the number of cases in the "Vaccinated" group
+sim.diff<-abs(sim-(ct-sim)) # calculate the absolute difference in the group sizes, sim and ct-sim
+temp<-data.frame(sim.diff)
+ggplot(temp,aes(x=sim.diff))+geom_histogram(bins=30)+ggtitle("Simulated Absolute Differences in the Group Sizes")
+mean(sim.diff>=obs.diff) 
+
+
+
+```
+Are the sizes of the observed `Vaccinated` and `Placebo` groups consistent with hypothesis that the assignments to the groups was made by assigning each participant independently to the `Vaccinated` group with probability $0.5$ and to the `Placebo` group with probability $0.5$ ? (Yes: The value 0.4411 means that about 44.11% of the simulated differences are greater than or equal to the observed differences. This large proportion suggests that the observed difference in group sizes is not unusual under the hypothesis of random assignment. Therefore, since the value 0.4411 is around 0.5, then the observed difference in group sizes is within range given the large number of simulations showing an equal or greater difference.)
+
+# Question 2
+
+The data for this question are from the Youth Risk Behavior Surveillance System (YRBSS) (<https://www.cdc.gov/healthyyouth/data/yrbs/index.htm>). The data set "dat19_21.RData" contains data from the 2019 and 2021 surveys of high school students. The question q24 asks, "During the past 12 months, have you ever been electronically bullied? (Count being bullied through texting, Instagram, Facebook, or other social media.)" A response of "yes" is coded as 1 and a response of "no" is coded as 2. 
+
+The data set also contains the variable "weight" which is the weight assigned to each observation. Each weight is based on the inverse of the probability of of that student's being sampled. For example, if student $a$ had a probability of .01 of being sampled while student $b$ had a probability of .02 of being sampled, then student $a$ represents 100 students in the population while student $b$ represents 50 students in the population. Thus the weight of student $a$ twice the weight of student $b$. The weights are scaled so that the sum of the weights in each year is equal to the size of the survey sample that year. 
+
+As a result, we can estimate the number of students in the population who were bullied electronically by summing the weights of the students who were bullied electronically.
+
+```{r}
+load("dat19_21.RData")# Provide the address relative to the working directory of your Rmd.
+dat.19.21$bullied<-ifelse(dat.19.21$q24==1,1,0) # recode q24 to 0=not bullied electronically and 1=bullied electronically
+dat.trim<-filter(dat.19.21,age<=5) # trim to ages 16 and under
+# Estimate the number of students in the target age range in 2019 and 2021 who were bullied electronically:
+dat.ct<-filter(dat.trim,age<=5)
+dat.ct<-dat.ct%>%group_by(year)%>%summarize(n=n(),n.bullied=round(sum(bullied*weight,na.rm=TRUE)),
+                                            prop.bullied=n.bullied/n)
+```
+
+
+## Q2, part 1
+(10 points)
+
+The goal here is to study whether the rate of electronic bullying increased during covid-19 precautions.
+
+Use the null model that the estimated count of electronically bullied children in the 2021 population in the target age range is the result having the fixed total of `r sum(dat.ct$n.bullied,na.rm=TRUE)` cases of electronic bullying, with each case assigned to the 2021 population in the target age range with probability equal to the proportion of the 2021 population in the combined population in target age range.
+
+Simulate the resulting counts of electronically bullied students in the 2021 population in the target age range n=10,000 times. Plot the distribution of the simulated counts. Estimate the probability under this null model that the simulated count is greater than or equal to the observed estimate `r dat.ct$n.bullied[2]` of electronically bullied students in the 2021 population in the target age range.
+
+```{r}
+n<-10000
+ct<-sum(dat.ct$n.bullied[1:2])
+prop<-dat.ct$n[2]/sum(dat.ct$n)
+set.seed(45678765)
+sim2<-rbinom(n,ct,prop) 
+temp<-data.frame(sim2)
+ggplot(temp,aes(x=sim2))+geom_histogram(bins=30)+ggtitle("Simulated Counts of Bullied Students in 2021")
+# Please provide code to calculate your estimate of the probability under this null model that the simulated count is greater than or equal to the observed estimate. Please be sure that your computed probability shows in your knitted solutions.
+observed_estimate <- 1935  # Observed estimate of electronically bullied students in 2021
+probability_estimate <- sum(sim2 >= observed_estimate) / n  # Estimate of the probability
+
+# Output the probability
+print(probability_estimate)
+```
+
+## Q2, part 2
+(10 points)
+
+Are these data estimates consistent with the null hypothesis that, in regard to bullying, the characteristics of the 2019 population and the 2021 population are the same? (Yes:The estimated probability is 0.2369 which means there is 23.69% chance that the simulated count of electronically bullied students in the 2021 population in the target age range is greater than or equal to the observed estimate. Therefore the data estimates are consistent with the null hypothesis.) 
+
+## Q2, part 3
+
+(10 points)
+
+As noted above YRBSS are not simple samples. The sampling process described in https://www.cdc.gov/mmwr/pdf/rr/rr6201.pdf  results in weights assigned to the observations. If we consider the observations, with their weights, to be an accurate estimate of the target population, then we can sample the data, according to the weights, to obtain an approximation of a simple random sample, in which each individual is equally likely to be sampled from the target population.
+
+Below, we use the 2019 population distribution to generate samples of the size of the 2021 survey population in our 16-and-under age range. For each sample, we count the number of cases of bullying in that sample. We repeat this process 500 times. We then compare the distribution of the number of cases of bullying in the samples to the number of cases of calculated from the the 2021 data in the 16-and-under age range . 
+
+
+```{r}
+dat.19<-dat.trim[dat.trim$year==2019,]
+n<-500
+set.seed(45678765)
+sim3<-numeric(n)
+for( i in 1:n){
+  sample.indices<-sample(1:nrow(dat.19),size=dat.ct$n[2],replace=TRUE,prob=dat.19$weight)
+  sim3[i]<-sum((dat.19$bullied)[sample.indices],na.rm=TRUE)
+}
+```
+
+Please provide code to evaluate the null hypothesis that the number of cases of bullying computed from the 2021 data (as the sum of the weights of the cases in which bullying was reported) is consistent with the number of cases of bullying that would be found in a sample of that size, but drawn from 2019 population distribution in the 16-and-under age range.
+
+```{r}
+# Please be sure that your computed value shows in your knitted solutions
+# Calculate the p-value for the null hypothesis
+p_value <- sum(sim3 >= dat.ct$n.bullied[2]) / n
+
+# Output the p-value
+print(p_value)
+```
+
+## Q2, part 4
+
+(10 points)
+
+Is the estimate of the number of cases of bullying in the 2021 data, computed as the sum of the weights of the cases in which bullying was reported, consistent with the null hypothesis that the 2021 population in the target age range has the same distribution as the 2019 population in the target age range? (Yes: The p-value of 0.788=(78.8%) suggests that the observed data is very likely to occur under the null hypothesis and since our P value is above the P-value threshold of 0.05,we do not have sufficient evidence to reject the null hypothesis.)  
+
+
+
+
+
+

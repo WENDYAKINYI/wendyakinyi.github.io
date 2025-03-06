@@ -1,0 +1,278 @@
+---
+title: "Problem Set 9"
+author: "W. Akinyi"
+date: "3/7/2024"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(MASS)
+
+```
+
+# Introduction
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please generate your solutions in R markdown and upload both a knitted doc, docx, or pdf document in addition to the Rmd file. Please be sure that the knitted document displays the results of your calculations.
+
+
+# Question 1
+
+These birth records are from the birth records from November 2019 and November 2020 from the CDC. The data are available at:
+https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm
+
+
+The parts of this question are oriented toward testing the null hypothesis that preterm, term, and post-term births occurred in the same proportions in November 2019 (pre-covid) and November 2020 (during covid).
+
+According to the World Health Organization, there are sub-categories of preterm birth, based on gestational age:
+
+extremely preterm (less than 28 weeks)
+
+very preterm (28 to less than 32 weeks)
+
+moderate to late preterm (32 to 37 weeks)
+
+(https://www.who.int/news-room/fact-sheets/detail/preterm-birth , downloaded 3/7/2024)
+
+According to the American College of Obstetricians and Gynecologists, there are sub-categories of term birth, based on gestational age:
+
+early term (37 to 39 weeks)
+
+full term (39 to 41 weeks)
+
+late term (41 0/7 weeks of gestation through 41 6/7 weeks of gestation)
+
+postterm (42 0/7 weeks of gestation and beyond) 
+
+(https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2019/10/definition-of-term-pregnancy , downloaded 3/7/2024)
+
+```{r}
+load("dat.comb.RData")
+
+```
+
+The variables retained here are:
+
+- DOB_YY: year of birth
+
+- COMBGEST: completed gestation time in weeks
+
+- WTGAIN: maternal weight gain in pounds
+
+- DBWT: birth weight in grams
+
+- PWgt_R: maternal pre-pregnancy weight in pounds
+
+- DWgt_R: maternal pregnancy weight in pounds
+
+```{r}
+# Create a categorical variable for term based on gestational age
+dat.comb<-dat.comb %>% 
+  mutate(term = case_when(
+    COMBGEST < 28 ~ "extr.pre",
+    COMBGEST < 32 ~ "very.pre",
+    COMBGEST < 37 ~ "mod.late.pre",
+    COMBGEST < 39 ~ "early.term",
+    COMBGEST < 41 ~ "full.term",
+    COMBGEST < 42 ~ "late.term",
+    TRUE ~ "post.term"
+  )
+)
+
+dat.comb$term<-factor(dat.comb$term,levels=c("extr.pre","very.pre","mod.late.pre",
+                                         "early.term","full.term","late.term","post.term"))
+```
+
+## Q1, part 1
+
+(10 points)
+
+Please perform a $\chi ^2$ test of the null hypothesis that the proportions of preterm, term, and post-term births are the same in November 2019 and November 2020. Please interpret the results or explain why you cannot perform the test.
+
+Since the p-value is much smaller than the typical significance level, we reject the null hypothesis. This suggests that there is a statistically significant difference in the proportions of preterm, term, and post-term births between November 2019 and November 2020 based on the data analyzed.Therefore, we can conclude that the proportions of birth categories were not the same in November 2019 compared to November 2020.
+```{r}
+# Create a data set convenient for visualization
+
+temp.summary<-dat.comb%>%group_by(DOB_YY)%>%
+  mutate(tot=n())
+temp.summary<-temp.summary%>%group_by(DOB_YY,term)%>%
+  summarize(prop=n()/tot[1],.groups="drop")
+
+pivot_wider(temp.summary,names_from=DOB_YY,values_from=prop)
+
+ggplot(temp.summary,aes(x=term,y=prop,fill=as.factor(DOB_YY)))+geom_col(position="dodge")+
+  labs(title="Proportion of births by term and year",x="Term",y="Proportion")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+m<-table(dat.comb$DOB_YY,dat.comb$term)
+
+# Please run the test, show the results, and interpret the results or explain why you cannot perform the test.
+
+# Perform the Chi-squared test
+chi_test_result <- chisq.test(m)
+
+# Display the test results
+print(chi_test_result)
+
+```
+## Q1, part 2
+
+(10 points)
+
+People will sometimes say that with a very large data set, everything is significant. To test this, please run the code below that randomly permutes the association variable giving the term category of the birth. Then perform a $\chi ^2$ test on the permuted results. Please interpret the results or explain why you cannot perform the test.
+
+The p-value is much higher than the typical significance level. Therefore we fail to reject the null hypothesis for the permuted data since there is no statistically significant difference in the proportions of preterm, term, and post-term births between November 2019 and November 2020.
+
+```{r}
+set.seed(56789)
+```
+
+```{r}
+
+rand.term<-sample(dat.comb$term, nrow(dat.comb),replace=TRUE)
+dat.comb$rand.term<-rand.term
+
+temp.summary<-dat.comb%>%group_by(DOB_YY)%>%
+  mutate(tot=n())
+temp.summary<-temp.summary%>%group_by(DOB_YY,rand.term)%>%
+  summarize(prop=n()/tot[1],.groups="drop")
+
+pivot_wider(temp.summary,names_from=DOB_YY,values_from=prop)
+
+ggplot(temp.summary,aes(x=rand.term,y=prop,fill=as.factor(DOB_YY)))+geom_col(position="dodge")+
+  labs(title="Proportion of births by term and year",subtitle="randomized data",x="Term",y="Proportion")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
+
+m.rand<-table(dat.comb$DOB_YY,dat.comb$rand.term)
+
+# Please run the test, show the results, and interpret the results or explain why you cannot perform the test.
+# Perform the Chi-squared test
+chi_test_result_rand <- chisq.test(m.rand)
+
+# Display the test results
+print(chi_test_result_rand)
+
+```
+
+## Q1, part 3
+
+(10 points)
+
+Please perform a basic Fisher's exact test of the null hypothesis that the proportions of preterm, term, and post-term births are the same in November 2019 and November 2020, using the unpermuted data. Please interpret the results or explain why you cannot perform the test.
+
+The low p-value obtained indicates that there is strong evidence against the null hypothesis that the proportions of preterm, term, and post-term births are the same in November 2019 and November 2020 therefore we reject the null hypothesis.
+
+```{r}
+# Basic Fisher's exact test
+
+# For reference, this is a p-value based on simulations.
+set.seed(49876)
+fisher.test(m,simulate.p.value=TRUE,B=1000)
+
+
+```
+
+## Q1, part 4
+
+(10 points)
+
+Suppose we had a much smaller data set, as simulated below. For these data, please try the $\chi ^2$ test and Fisher's exact test. Please interpret the results of each test or explain why you cannot perform the test.
+
+The warning from the Chi Squared test result shows that the test's assumptions are not met due to low expected frequencies in some cells in the contingency table therefore we proceed to conduct the Fisher's Exact Test.
+
+The high P-value from the Fisher's Exact  test suggests that there is not enough evidence to reject the null hypothesis.
+
+```{r}
+set.seed(56789)
+
+dat.sub<-dat.comb[sample(1:nrow(dat.comb),100),]
+contingency_table <- table(dat.sub$DOB_YY, dat.sub$term)
+
+chi_test_result <- chisq.test(contingency_table)
+
+# Display the result
+print(chi_test_result)
+
+fisher_test_result <- fisher.test(contingency_table)
+
+# Display the result
+print(fisher_test_result)
+
+
+```
+
+# Question 2
+
+In this question we will consider the relationship between maternal weight gain and the infant birth weight.
+A visualization is provided below for the small data set.
+
+```{r}
+# convert birth weight to pounds
+dat.sub$DBWT.lb<-dat.sub$DBWT/453.592
+ggplot(dat.sub,aes(x=WTGAIN,y=DBWT.lb))+geom_point()
+```
+
+
+
+## Q2, part 1
+
+(5 points)
+
+Based on the correlation coefficient, is there a positive association between maternal weight gain and infant birth weight? That is, are higher maternal weight gains associated with higher infant birth weights? 
+
+The correlation coefficient of 0.19177217 shows a very weak positive association between maternal weight gain and infant birth weight. The positive correlation suggests a tendency for higher maternal weight gains to be associated with higher infant birth weights, but does not necessarily mean that maternal weight gain directly causes higher birth weights.
+
+```{r}
+
+
+dat.comb$DBWT.lb<-dat.comb$DBWT/453.592
+cor(dat.comb$WTGAIN,dat.comb$DBWT)
+cor(dat.comb$WTGAIN,dat.comb$DBWT.lb)
+```
+
+
+## Q2, part 2
+
+(5 points)
+
+Is the variance of the difference between maternal weight gain and infant birth weight equal to the sum of the variances of maternal weight gain and infant birth weight? 
+
+No. The calculated variance of the difference between maternal weight gain and infant birth weight is 222.9397 and the the sum of the variances of maternal weight gain and infant birth weight, minus twice their covariance is also 222.9397, meaning the variance for the sum of the variances of maternal weight gain and infant birth weight is higher than variance of the difference between maternal weight gain and infant birth weight, putting into consideration the subtraction of twice their covariance.
+
+```{r}
+var(dat.comb$WTGAIN)
+var(dat.comb$DBWT.lb)
+
+
+var(dat.comb$WTGAIN-dat.comb$DBWT.lb)
+
+var(dat.comb$WTGAIN)+var(dat.comb$DBWT.lb)-2*cov(dat.comb$WTGAIN,dat.comb$DBWT.lb)
+
+```
+
+
+# Question 3
+
+(just a look ahead)
+
+
+```{r}
+birthweight.lm<-lm(DBWT.lb~WTGAIN+COMBGEST,data=dat.sub)
+summary(birthweight.lm)
+plot(birthweight.lm)
+
+dat.sub$term[dat.sub$DBWT.lb==min(dat.sub$DBWT.lb)]
+
+birthweight.trim.lm<-lm(DBWT.lb~WTGAIN+COMBGEST,data=dplyr::filter(dat.sub,term!="extr.pre"))
+summary(birthweight.trim.lm)
+plot(birthweight.trim.lm)
+```
+

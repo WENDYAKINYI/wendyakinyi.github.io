@@ -1,0 +1,96 @@
+step 1: View
+
+# cust_name	cust_type_desc	prod_desc	pounds
+Waterman, Al	Private	Unbrittle Peanut Paradise	15
+Montag, susie	Private	Celestial Cashew Crunch	2
+Montag, susie	Private	Mystery Melange	3.7
+Armstrong, Inc.	Retail	Mystery Melange	3.7
+Pickled Pickles	Retail	Celestial Cashew Crunch	1
+Pickled Pickles	Retail	Nuts Not Nachos	7.6
+Pickled Pickles	Retail	Nuts Not Nachos	3.5
+Bobby Bon Bons	Retail	Celestial Cashew Crunch	3.7
+Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	1.2
+Bobby Bon Bons	Retail	Mystery Melange	4.4
+Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	3
+The Candy Kid	Wholesale	Celestial Cashew Crunch	3.5
+Columberg Sweets	Wholesale	Unbrittle Peanut Paradise	14
+Columberg Sweets	Wholesale	Nuts Not Nachos	4.8
+
+Step 2:Create candy_matview table
+
+# view_id, cust_name, cust_type_desc, prod_desc, pounds
+
+Step 3: Insert into candy_matview
+
+# view_id	cust_name	cust_type_desc	prod_desc	pounds
+1	Waterman, Al	Private	Unbrittle Peanut Paradise	15
+2	Montag, susie	Private	Celestial Cashew Crunch	2
+3	Montag, susie	Private	Mystery Melange	3.7
+4	Armstrong, Inc.	Retail	Mystery Melange	3.7
+5	Pickled Pickles	Retail	Celestial Cashew Crunch	1
+6	Pickled Pickles	Retail	Nuts Not Nachos	7.6
+7	Pickled Pickles	Retail	Nuts Not Nachos	3.5
+8	Bobby Bon Bons	Retail	Celestial Cashew Crunch	3.7
+9	Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	1.2
+10	Bobby Bon Bons	Retail	Mystery Melange	4.4
+11	Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	3
+12	The Candy Kid	Wholesale	Celestial Cashew Crunch	3.5
+13	Columberg Sweets	Wholesale	Unbrittle Peanut Paradise	14
+14	Columberg Sweets	Wholesale	Nuts Not Nachos	4.8
+
+
+Step 4: Insert into candy_purchase values
+
+# purch_id	prod_id	cust_id	purch_date	delivery_date	pounds	status
+1	1	5	2007-09-06	2007-09-06	3.5	PAID
+2	2	6	2007-09-06	2007-09-07	15	PAID
+3	1	9	2007-09-06	2007-09-06	2	PAID
+3	3	9	2007-09-06	2007-09-07	3.7	PAID
+4	3	2	2007-09-06		3.7	PAID
+5	1	7	2007-09-06	2007-09-06	3.7	NOT PAID
+5	2	7	2007-09-06	2007-09-06	1.2	NOT PAID
+5	3	7	2007-09-07	2007-09-07	4.4	NOT PAID
+6	2	7	2007-09-07		3	PAID
+7	2	10	2007-09-07		14	NOT PAID
+7	5	10	2007-09-07		4.8	NOT PAID
+8	1	4	2007-09-07	2007-09-08	1	PAID
+8	5	4	2007-09-07		7.6	PAID
+9	5	4	2007-09-07	2007-09-08	3.5	NOT PAID
+100	5	5	2020-11-02	2020-11-06	5.2	PAID
+
+
+Step 5: Check candy_matview if information was added
+
+# view_id	cust_name	cust_type_desc	prod_desc	pounds
+1	Montag, susie	Private	Mystery Melange	3.7
+2	Montag, susie	Private	Celestial Cashew Crunch	2
+3	Waterman, Al	Private	Unbrittle Peanut Paradise	15
+4	Pickled Pickles	Retail	Nuts Not Nachos	3.5
+5	Pickled Pickles	Retail	Nuts Not Nachos	7.6
+6	Pickled Pickles	Retail	Celestial Cashew Crunch	1
+7	Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	3
+8	Bobby Bon Bons	Retail	Mystery Melange	4.4
+9	Bobby Bon Bons	Retail	Unbrittle Peanut Paradise	1.2
+10	Bobby Bon Bons	Retail	Celestial Cashew Crunch	3.7
+11	Armstrong, Inc.	Retail	Mystery Melange	3.7
+12	The Candy Kid	Wholesale	Nuts Not Nachos	5.2
+13	Columberg Sweets	Wholesale	Nuts Not Nachos	4.8
+14	Columberg Sweets	Wholesale	Unbrittle Peanut Paradise	14
+15	The Candy Kid	Wholesale	Celestial Cashew Crunch	3.5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

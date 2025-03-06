@@ -1,0 +1,516 @@
+---
+title: "Final Exercises"
+author: "W. Akinyi"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+# install.packages("onewaytests")
+library(onewaytests)
+library(ggpubr)
+library(gridExtra)
+
+```
+
+## Instructions
+
+Please work these problems on your own. You may use web searches and LLM searches, but you may not ask others for help online or in person. Please credit your sources beyond the course materials.
+
+Please complete the questions on this template and upload your solutions in a single knitted Word or pdf document. Please also upload your completed template.
+
+In light of the exam context, the data sets for the questions have been generated clearly to satisfy or obviously to violate the requirements of the statistical procedures. If reasonable exploratory analysis is done, there should be little ambiguity as to whether the given data satisfy the requirements. This is unrealistic, but less stressful for students and graders alike.
+
+# Question 1
+
+This question uses the data in the file dat_one_sample.RData, a data frame called dat_one_sample with one column, "x". You may assume that the data are a independent samples from a population.
+
+
+```{r}
+load("dat_one_sample.RData")
+```
+
+
+## Q1, part 1
+
+(5 points)
+
+Please display a Normal qq plot as a visual Normality check on the variable x. Please report your conclusion about the Normality of the data. 
+
+The data points approximately follow a normal distribution with significant deviations present mostly at the tails.
+
+```{r}
+# Normal QQ plot for the variable x
+qqnorm(dat_one_sample$x)
+qqline(dat_one_sample$x)
+
+```
+
+
+## Q1, part 2
+
+(5 points)
+
+Please perform a t-test for the null hypothesis is that the median of x equals 70 and display the results.
+
+```{r}
+# one-sample t-test
+t_test_result <- t.test(dat_one_sample$x, mu = 70)
+
+# Results
+print(t_test_result)
+
+```
+
+
+## Q1, part 3
+
+(5 points)
+
+Please display the 99% confidence interval for the mean of x and 95% confidence interval for the mean of x based on the t-test
+
+```{r}
+# one-sample t-test for 99% confidence interval
+t_test_result_99 <- t.test(dat_one_sample$x, mu = 70, conf.level = 0.99)
+
+# Display for the 99% confidence interval
+cat("99% Confidence Interval for the mean of x:", t_test_result_99$conf.int, "\n")
+
+# one-sample t-test for 95% confidence interval
+t_test_result_95 <- t.test(dat_one_sample$x, mu = 70, conf.level = 0.95)
+
+# Display for the 95% confidence interval
+cat("95% Confidence Interval for the mean of x:", t_test_result_95$conf.int, "\n")
+
+```
+
+
+
+## Q1, part 4
+
+(5 points)
+
+
+Please perform a Wilcoxon signed rank test for the null hypothesis is that the median of x equals 70 and display the results. 
+
+```{r}
+# Wilcoxon signed-rank test
+wilcox_test_result <- wilcox.test(dat_one_sample$x, mu = 70)
+
+# Results
+print(wilcox_test_result)
+
+```
+
+
+## Q1, part 5
+
+(10 points)
+
+Based on the earlier parts of this question, please state whether the data are consistent with the hypothesis that the median of x equals 70 and explain your conclusion.
+
+The one-sample t-test resulted in a p-value of 0.04729, which is less than the significance level, therefore we reject the null hypothesis based on this outcome.In addition, the 95% confidence interval does not include 70, further supporting this conclusion. However, the 99% confidence interval does include 70, indicating that when allowing for more uncertainty, the mean could be consistent with 70.Therefore we proceed with the Wilcoxon Signed rank test which is more appropriate for testing hypotheses about medians. This test resulted in a p-value of 0.06465 which is above the significance level, therefore we fail to reject the null hypothesis, meaning the data are consistent with the hypothesis that the median of x equals 70.
+  
+# Question 2
+
+The data set dat_pre_post in the file "dat_pre_post.RData" simulates pre-intervention measurements for 100 individuals together with their post-intervention measurements. The goal of this question is to carry out an applicable analysis that makes full use of the hypotheses satisfied by the data to test the null hypothesis that intervention is not associated with a systematic increase or decrease in the values for the individuals. (Note that to have evidence that any change was caused by the intervention, a controlled experiment would be required.) 
+
+```{r}
+load("dat_pre_post.RData")
+
+```
+
+
+
+## Q2, part 1
+
+(5 points)
+
+To help you decide which test to use, please generate a scatter plot of the pre-intervention values against the post-intervention values. 
+
+
+```{r}
+
+# Plotting the scatter plot
+plot(dat_pre_post$pre, dat_pre_post$post, 
+     main="Scatter Plot of Pre vs. Post Intervention Measurements", 
+     xlab="Pre-Intervention Measurements", 
+     ylab="Post-Intervention Measurements", 
+     pch=19, col="blue") # pch=19 makes the points solid circles, col="blue" colors them blue
+
+# Reference line
+abline(a=0, b=1, col="red") # Draws a red line with intercept=0 and slope=1
+
+
+```
+
+
+
+## Q2, part 2
+
+(5 points)
+
+Please display a Normal qq-plot of the difference between the post-intervention values and the pre-intervention values for the individuals. 
+ 
+```{r}
+
+# Differences between post and pre-intervention values
+differences <- dat_pre_post$post - dat_pre_post$pre
+
+# Normal QQ-plot of the differences
+qqnorm(differences, main="QQ-Plot of Differences (Post - Pre)", col="blue")
+qqline(differences, col="red") # Adds a reference line to the plot
+
+
+```
+ 
+
+## Q2, part 3
+
+(10 points)
+
+Please state what test you selected, perform your selected test, and interpret the results.
+Wilcoxon signed-rank test:
+Since the p-value is greater than the typical significance level , we fail to reject the null hypothesis meaning, based on the data and the Wilcoxon signed-rank exact test, there is no statistically significant evidence of a systematic increase or decrease in values due to the intervention.
+
+```{r}
+# Wilcoxon signed-rank test
+wilcox_test_result <- wilcox.test(dat_pre_post$post, dat_pre_post$pre, paired=TRUE)
+
+# Results
+print(wilcox_test_result)
+
+
+```
+
+# Question 3
+
+The data "dat_two_sample" simulate independent, identically distributed samples from a population with the samples from $X$ in the "val" column, labeled with "gp"="x" and independent, identically distributed samples from a population with the distribution $Y$ in the "val" column, labeled with "gp"="y".
+
+```{r}
+load("dat_two_sample.RData")
+
+# Calculate the sample variances
+var(dat_two_sample$val[dat_two_sample$gp=="x"])
+var(dat_two_sample$val[dat_two_sample$gp=="y"])
+
+# Use another implementation of the Brown-Forsythe test from the onewaytests package:
+bf.test(val~gp,data=dat_two_sample)
+```
+
+## Q3, part 1
+
+(5 points)
+
+Please visually assess the Normality of the x's and the y's using Normal qq-plots. Do the samples appear consistent with the hypothesis that they are drawn from Normally distributed populations?
+
+The points in the Normal qq-plots do not fall approximately along the straight line, suggesting that the samples from populations $X$ and $Y$ may not be consistent with the hypothesis that they are drawn from normally distributed populations.
+
+```{r}
+
+# Q-Q plot for sample from population X
+qqplot_x <- ggplot(dat_two_sample[dat_two_sample$gp == "x", ], aes(sample = val)) +
+  stat_qq() +
+  stat_qq_line() +
+  ggtitle("Q-Q Plot for Sample from Population X") +
+  xlab("Theoretical Quantiles") +
+  ylab("Sample Quantiles")
+
+# Q-Q plot for sample from population Y
+qqplot_y <- ggplot(dat_two_sample[dat_two_sample$gp == "y", ], aes(sample = val)) +
+  stat_qq() +
+  stat_qq_line() +
+  ggtitle("Q-Q Plot for Sample from Population Y") +
+  xlab("Theoretical Quantiles") +
+  ylab("Sample Quantiles")
+
+# Display the Q-Q plots
+print(qqplot_x)
+print(qqplot_y)
+
+```
+
+
+## Q3, part 2
+
+(5 points)
+
+Please plot density estimates for the x values and the y values using geom_density in ggplot. Do the samples appear consistent with the hypothesis that the population distributions are related by $X=Y+c$ for some constant $c$?
+
+The visual assessment of the density estimates supports the hypothesis that the population distributions of x and y values are related by $X = Y + c$ for some constant $c based on the similarity in both shape and spread, suggesting that the samples may come from populations that are shifted versions of each other.
+```{r}
+# Plot for the density estimates for x and y
+ggplot(dat_two_sample, aes(x = val, fill = gp)) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Value", y = "Density", title = "Density Estimates for X and Y") +
+  scale_fill_manual(values = c("x" = "blue", "y" = "red"), name = "Group")
+
+```
+
+## Q3, part 3
+
+(10 points)
+
+Please select an appropriate test of the null hypothesis that the medians of the x's and the y's are equal, from among the Mann-Whitney U-test, the pooled sample t-test, and Welch's test. Please justify your choice. 
+
+The Mann-Whitney U-test is appropriate since it does not assume that the data is normally distributed, making it a robust choice given that the normality assumption is violated or uncertain based on the visual assessment done using the qq plots.
+
+
+## Q3, part 4
+
+(10 points)
+
+Please perform the test of the null hypothesis that medians of the x's and the y's are equal selected in part 3. Please interpret the results.
+
+Based on the p-value of 0.004681 suggests that the data provides strong evidence that the medians of the two groups are different therefore we reject the null hypothesis.This result is consistent with the hypothesis that the population distributions of x and y values are related by (X = Y + c) for some constant (c), but it specifically suggests that the constant (c) is not equal to 0, indicating a shift in the median values between the two groups.
+
+
+```{r}
+wilcox.test(val ~ gp, data = dat_two_sample)
+
+```
+
+
+
+
+# Question 4
+
+The data "mat" represent 50 independent samples from two jointly distributed probability distributions $G$ giving the value of "gp" from the sample space $\{a,b,c\}$ and $D$ giving the value of "decis" in the sample space $\{admit, defer,deny\}$. The count in position (i,j) is the number of observations in the sample that had the outcome of $G$ labeling the $i^{th}$ and outcome of $D$ labeling the $j^{th}$ column. 
+
+
+```{r}
+load("mat.Rdata")
+
+```
+
+
+## Q4, part 1
+
+(5 points)
+
+ Please carry out a $\chi^2$ test of the independence of $G$ and $D$ based on the contingency table in "mat". Please interpret the results.
+ 
+ Based on the chi-squared test, there is significant evidence to reject the null hypothesis of independence between G and D. This suggests that there is an association between the two variables whereas  the warning message indicates that the assumptions of the test may not have been be fully met suggesting that results should be interpreted with caution due to the potential violation of the test assumptions.
+```{r}
+
+# Perform the Chi-squared test of independence
+chi_squared_test_result <- chisq.test(mat)
+
+# Print the result of the Chi-squared test
+print(chi_squared_test_result)
+
+
+```
+
+
+
+## Q4, part 2
+
+(5 points)
+
+Please carry out Fisher's exact test on "mat" and interpret the results.
+
+Based on Fisher's exact test, there is significant evidence to reject the null hypothesis of independence between G and D.  There appears to be some association between the two variables.
+```{r}
+# Perform Fisher's exact test
+fisher_test_result <- fisher.test(mat)
+
+# Print the result of Fisher's exact test
+print(fisher_test_result)
+
+
+
+```
+
+
+
+
+# Question 5
+
+The data sets loaded below were generated to satisfy or violate assumptions of the linear model of y on x, $Y=mX+B+\varepsilon$. There is one data set for which the assumptions are satisfied, one data set for which the relation between x and y is non-linear, one for which there is evidence of heteroskedasticity of the standardized residuals, and one for which the standardized residuals provide evidence that $\varepsilon$ is not Normally distributed. For each data set, please show the summary of a linear model of y on x and a scatter plot of the outcome variable y against the explanatory variable x showing the regression line. If the data do not satisfy the assumptions of linear regression, please identify an assumption that is violated and a show a diagnostic plot that demonstrates that the assumption is violated. If the data do satisfy the assumptions of linear regression, please show diagnostic plots in support of the assumptions. Please include and explanation of your conclusion beyond the process of elimination. 
+
+
+```{r}
+
+load("dat_xy_A.RData")
+load("dat_xy_B.RData")
+load("dat_xy_C.RData")
+load("dat_xy_D.RData")
+
+```
+
+
+
+ The function below takes a linear model and a number k in 1,2,3 as arguments and returns a diagnostic plot of a linear model of data with the same explanatory variable with the outcome variable computed from the explanatory variable according to the linear model. If k=1 or k=3, the plot returned is the corresponding plot from print method for lm. the If k=2, the function returns a Normal qq plot of the standardized residuals.
+ 
+```{r}
+lm.compare<-function(m,k){
+  # Extract the explanatory variable from the model
+  dat<-data.frame(x=m$model[[1]])
+  # Compute the outcome variable from the explanatory variable according to the model
+  dat$y<-dat$x*m$coefficients[2]+m$coefficients[1]+rnorm(nrow(dat),0,sd=summary(m)$sigma)
+  # Fit a linear model to the data
+  m.this<-lm(y~x,data=dat)
+  if(k==2){
+    # Return a Normal qq plot of the standardized residuals
+   return(ggqqplot(rstandard(m.this)))
+  } else {
+    # Return the kth plot from the print method for lm
+    return(plot(m.this, which=k))
+  }
+}
+```
+
+If you don't set a seed, you can run the function multiple times to see the different plots for a linear model based on the same $X,x,m,b$ and $\sigma$. 
+
+```{r}
+# Example
+
+lm.compare(lm(post~pre,data=dat_pre_post),1)
+
+```
+
+## Q5, part 1
+
+(3 points)
+
+For data set dat_xy_A, please show 
+
+* the summary of a linear model of y on x 
+
+* a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+* diagnostic plot(s) 
+
+* interpretation of the diagnostic plot(s) in terms of data satisfaction of the assumptions of the linear regression of y on x
+
+Based on the scatter plot the points increase systematically around the diagonal line as x changes indicating heteroscedasticity. The violation of the homoscedasticity assumption is further supported by the residuals vs. Fitted Values plot which shows that the spread of the residuals decreases systematically as the fitted values change indicating non-constant variance of residuals. Therefore,the assumption of homoscedasticity is violated for this data set dat_xy_A.
+
+```{r}
+#the summary of a linear model of y on x 
+lm_A <- lm(y ~ x, data = dat_xy_A)
+summary(lm_A)
+
+#a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+ggplot(dat_xy_A, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  ggtitle("Scatter Plot of y vs. x with Regression Line for dat_xy_A")
+
+ #diagnostic plot(s) 
+lm.compare(lm_A, 2)  # QQ plot
+lm.compare(lm_A, 1)  # Residuals vs Fitted values plot
+
+
+```
+
+
+## Q5, part 2
+
+(3 points)
+
+For data set dat_xy_B, please show 
+
+* the summary of a linear model of y on x 
+
+* a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+* diagnostic plot(s) 
+
+* interpretation of the diagnostic plot(s) in terms of data satisfaction of the assumptions of the linear regression of y on x
+
+Based on the summary of the linear model, R-squared value is 0.06176, which means that approximately 6.176% of the variability in the outcome variable y can be explained by the model indicating a weak linear relationship between x and y.Therefore, this is the dataset for which the relation between x and y is non-linear
+
+```{r}
+#the summary of a linear model of y on x 
+lm_B <- lm(y ~ x, data = dat_xy_B)
+summary(lm_B)
+
+#a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+ggplot(dat_xy_B, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  ggtitle("Scatter Plot of y vs. x with Regression Line for dat_xy_B")
+
+ #diagnostic plot(s) 
+lm.compare(lm_B, 2)  # QQ plot
+lm.compare(lm_B, 1)  # Residuals vs Fitted values plot
+
+```
+
+## Q5, part 3
+
+(2 points)
+
+For data set dat_xy_C, please show 
+
+* the summary of a linear model of y on x 
+
+* a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+* diagnostic plot(s) 
+
+* interpretation of the diagnostic plot(s) in terms of data satisfaction of the assumptions of the linear regression of y on x
+
+The scatter plot shows that as x increases, y also increases, suggesting a positive linear relationship. The QQ plot shows there are a few deviations at the extreme ends, but overall, the plot indicates that the normality assumption is reasonable for this dataset.The residuals vs. Fitted Values plot the residuals are randomly dispersed around the horizontal axis without forming any clear pattern, indicating homoscedasticity. Therefore, this is the dataset for which the linearity assumptions are satisfied.
+
+```{r}
+#the summary of a linear model of y on x 
+lm_C <- lm(y ~ x, data = dat_xy_C)
+summary(lm_C)
+
+#a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+ggplot(dat_xy_C, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  ggtitle("Scatter Plot of y vs. x with Regression Line for dat_xy_B")
+
+ #diagnostic plot(s) 
+lm.compare(lm_C, 2)  # QQ plot
+lm.compare(lm_C, 1)  # Residuals vs Fitted values plot
+
+```
+
+## Q5, part 4
+
+(2 points)
+
+For data set dat_xy_D, please show 
+
+* the summary of a linear model of y on x 
+
+* a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+* diagnostic plot(s) 
+
+* interpretation of the diagnostic plot(s) in terms of data satisfaction of the assumptions of the linear regression of y on x
+
+
+The scatter plot points are randomly scattered around the diagonal line indicating a significant relationship between the variables x and Y. The residuals vs. Fitted Values plot shows that the residuals are randomly dispersed around the horizontal axis without forming any pattern, indicating homoscedasticity. However, the QQ plot shows there are  deviations from the diagonal line, especially at the extreme ends,making this the dataset for which the standardized residuals provide evidence that $\varepsilon$ is not Normally distributed.
+
+```{r}
+#the summary of a linear model of y on x 
+lm_D <- lm(y ~ x, data = dat_xy_D)
+summary(lm_D)
+
+#a scatter plot of the outcome variable y against the explanatory variable x showing the regression line
+
+ggplot(dat_xy_D, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  ggtitle("Scatter Plot of y vs. x with Regression Line for dat_xy_B")
+
+ #diagnostic plot(s) 
+lm.compare(lm_D, 2)  # QQ plot
+lm.compare(lm_D, 1)  # Residuals vs Fitted values plot
+
+```
+
+

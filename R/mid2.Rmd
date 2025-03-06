@@ -1,0 +1,551 @@
+---
+title: "Midterm Exercises"
+author: "W.Akinyi"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+library(lawstat)
+library(GGally)
+library(rpart)
+library(rattle)
+library(car)
+library(dplyr)
+library(stats)
+library(leaps)
+options(dplyr.summarise.inform = FALSE)
+```
+
+## Instructions
+
+Please complete the questions on this template and upload your solutions in a single knitted Word or pdf document. Please also upload your completed template.
+
+In light of the exam context, the data sets for the questions have been generated clearly to satisfy or obviously to violate the requirements of the statistical procedures. If reasonable exploratory analysis is done, there should be little ambiguity as to whether the given data satisfy the requirements. This is unrealistic, but less stressful for students and graders alike. Note that all the values data sets are hypothetical and do not represent real data.
+
+Your solutions must be your own work. You may research methods and code, but you may not collaborate with others. If you use resources other than the course materials, please cite them.
+
+# Question 1
+
+The data set "dat.logist" simulates radon assessment estimates for 150 properties. The data set has a binary outcome `danger` for whether the property had sufficiently high radon levels to warrant mitigation measures. The data set has 3 explanatory variables: `structure`, `geology`, and `material`. A logistic regression model of `danger` on the 3 explanatory variables is fit below. 
+
+## Question 1, part 1
+
+(5 points)
+
+Please give the accuracy of the model on these data. 
+
+The model correctly predicts the outcome for about 89.33% of the properties in the dataset since the accuracy of the model is 0.8933.
+
+```{r}
+
+load("dat_logist.RData")
+m.radon<-glm(danger~(geology+material)*structure,data=dat.logist,family="binomial")
+summary(m.radon)
+
+# Predict the probabilities of the positive class 
+predicted_probabilities <- predict(m.radon, type = "response")
+
+# Convert probabilities to binary outcomes based on a threshold of 0.5
+predicted_classes <- ifelse(predicted_probabilities > 0.5, 1, 0)
+
+# Actual outcomes
+actual_classes <- dat.logist$danger
+
+# Calculate the accuracy
+accuracy <- mean(predicted_classes == actual_classes)
+
+# Display
+print(paste("The accuracy of the model is:", accuracy))
+
+```
+
+## Question 1, part 2
+
+(5 points)
+
+Suppose the probability of a property with `geology` equal `rock` is modeled as having probability $0.89$ of having dangerous a radon level requiring mitigation. What are the modeled odds that the property requires mitigation? $8.09$
+
+```{r}
+# The probability
+probability <- 0.89
+
+# Calculate the odds
+odds <- probability / (1 - probability)
+
+# Display
+print(paste("The modeled odds that the property requires mitigation are:", odds))
+
+```
+
+## Question 1, part 3
+
+(5 points)
+
+Suppose the probability that one property with material equal to 1.4 is modeled as having
+odds equal to 0.7 of having dangerous a radon level requiring mitigation. What are the
+modeled odds that a second property requires mitigation if it has the same characteristics
+as the first except that material equals to 2.4?$20.89$
+
+```{r}
+# Extract coefficients
+coefficients <- coef(m.radon)
+
+# Calculate the change in the log-odds due to the change in material from 1.4 to 2.4
+change_in_material <- 2.4 - 1.4
+log_odds_change <- coefficients["material"] * change_in_material
+
+# Given odds for the first property
+odds1 <- 0.7
+
+# Convert odds to log-odds for the first property
+log_odds1 <- log(odds1)
+
+# Calculate the log-odds for the second property
+log_odds2 <- log_odds1 + log_odds_change
+
+# Convert the log-odds back to odds for the second property
+odds2 <- exp(log_odds2)
+
+# Display
+cat("Odds for the first property:", odds1, "\n")
+cat("Odds for the second property:", odds2, "\n")
+
+```
+
+
+# Question 2
+
+The data set `dat.reg` has 6 numeric explanatory variables, x1, x2, through x6, and a numeric outcome variable, y.
+
+```{r}
+load("dat_reg.RData")
+load("dat_reg_test.RData")
+
+```
+
+## Q2, part 1
+
+(5 points)
+
+Please fit a regression model of y on x1 through x6. Does the model appear to be consistent with the assumption the the outcome is a linear function of the explanatory variables with $Normal\left(0,\sigma^2\right)$ "noise"? Show a summary of the model. Show diagnostic plots relevant to your decision and explain your conclusion. In particular, if any hypotheses are violated, specify at least one. (5 points)
+
+The model does not appear to be consistent with that the outcome is a linear function. Based on the model diagnostic plots, the residuals vs. fitted plot shows heteroscedasticity which violates one of the assumptions of linear regression, which assumes constant variance of residuals. The Q-Q plot also shows a deviation from the straight line, particularly in the tails, suggesting a violation of the normality assumption for the residuals.
+
+```{r}
+# Fit the linear regression model
+model <- lm(y ~ x1 + x2 + x3 + x4 + x5 + x6, data = dat.reg)
+
+# Summary of the model
+summary(model)
+
+# Diagnostic plots
+par(mfrow = c(2, 2))
+plot(model)
+
+
+```
+
+## Q2, part 2
+
+(5 points)
+
+In the code below, the numeric explanatory variables are scaled to have sample mean equal to 0 and sample variance equal to 1. The `scale` function is used for this. Fit a linear model, m.big, for y on these explanatory variables including
+
+* the variables x1 through x6,
+
+* their pairwise interactions,
+
+* and the squares of the numeric variables. 
+
+You don't have to display this model. Please give a decision regarding whether the hypotheses of the linear model for y based on iid Normal errors are satisfied. Please show plots on which you base your decision and explain your conclusion.  
+
+Note the syntax (x1+x2+x3+x4+x5+x6)^2 in the formula in `lm` will give you the variables x1 through x6 and their pairwise interactions but not their squares. 
+
+Based on the model diagnostic plots, the residuals vs. fitted plot shows a random pattern therefore the assumptions of linear regression, which assumes constant variance of residuals holds. The Q-Q plot also shows no significant deviation from the straight line suggesting that the normality assumption for the residuals is also met.
+
+```{r}
+dat.reg.sc<-dat.reg%>% mutate(across(where(is.numeric) & !c(y), ~scale(.x)))
+# Fit the linear model with interactions and squared terms
+m.big <- lm(y ~ (x1 + x2 + x3 + x4 + x5 + x6)^2, data = dat.reg.sc)
+
+# Diagnostic plots
+par(mfrow = c(2, 2))
+plot(m.big)
+```
+
+
+
+```{r}
+fit<-rpart(y~.,data=dat.reg)
+rattle::fancyRpartPlot(fit, sub="regression tree for y")
+
+```
+
+## Q2, part 3
+
+(5 points)
+
+Please use the `step` function to fit a forward model based on AIC for y on the explanatory variables in the scaled data. The scope should be the the variables x1 through x6, their pairwise interactions and the squares of the numeric variables Please show the summary of the model, but not the trace of the model selection process. Please show the diagnostic plots for the model and explain your conclusion.
+
+Based on the model diagnostic plots, the residuals vs. fitted plot for the forward model shows heteroscedasticity which violates one of the assumptions of linear regression, which assumes constant variance of residuals, this is further supported by the scale-location plot which shows a pattern where the spread of residuals decrease as the fitted values increase. The Q-Q plot also shows deviations from the straight line at the tails, suggesting a violation of the normality assumption for the residuals. 
+Otherwise, based on the model summary the adjusted R-squared value indicates that the model explains approximately 94.36% of the variance in the outcome variable y.The F-statistic is also highly significant (p-value < 2.2e-16), suggesting that the model as a whole is statistically significant.
+
+```{r}
+
+# Convert x2 into a factor
+dat.reg.sc$x2 <- as.factor(dat.reg.sc$x2)
+
+# Create a full model formula including main effects, pairwise interactions, and squared terms for numeric variables
+formula_full <- y ~ (x1 + x2 + x3 + x4 + x5 + x6)^2 + I(x1^2) + I(x3^2) + I(x4^2) + I(x5^2) + I(x6^2)
+
+# Fitthe initial full model
+initial_model <- lm(formula_full, data = dat.reg.sc)
+
+# Perform stepwise model selection using AIC, starting with the simplest model then moving forward
+final_forward_model <- step(object = lm(y ~ 1, data = dat.reg.sc), 
+                    scope = list(lower = y ~ 1, upper = formula_full),
+                    direction = "forward",
+                    trace = FALSE)
+
+# Display of the summary of the final model
+summary(final_forward_model)
+
+# Generate diagnostic plots for the final model
+par(mfrow = c(2, 2))  
+plot(final_forward_model)
+
+
+```
+
+## Q2, part 4
+
+(5 points)
+
+Please use the `step` function to fit a backward stepwise model based on AIC for y on the explanatory variables in the scaled data. The scope should be the the variables x1 through x6, their pairwise interactions and the squares of the numeric variables Please show the summary of the model, but not the trace of the model selection process. Please show the diagnostic plots for the model and explain your conclusion.
+
+Based on the model diagnostic plots, the residuals vs. fitted plot for the backward model also shows heteroscedasticity which violates one of the assumptions of linear regression, which assumes constant variance of residuals, this is further supported by the scale-location plot which shows a pattern where the spread of residuals decrease as the fitted values increase. The Q-Q plot also shows deviations from the straight line at the tails, suggesting a violation of the normality assumption for the residuals. 
+Otherwise, based on the model summary the adjusted R-squared value indicates that the model explains approximately 94.33% of the variance in the outcome variable y.The F-statistic is also highly significant (p-value < 2.2e-16), suggesting that the model as a whole is statistically significant.
+```{r}
+
+# Perform backward stepwise model selection using AIC
+final_model <- step(initial_model, direction = "backward", trace = FALSE)  # trace = FALSE to not show the process
+
+# Display the summary of the final model
+summary(final_model)
+
+# Generate diagnostic plots for the final model
+par(mfrow = c(2, 2)) 
+plot(final_model)
+
+```
+
+
+## Q2, part 5
+
+(5 points)
+
+Still using the scaled versions of the variables x1 through x6, their pairwise interactions, and the squares of the numeric variables, please identify the best subsets of variables for models with 1 through 33 explanatory variables. You don't need to print out all the models. Please display the best subset model for the number of variables that results in the lowest BIC among these models. Do the diagnostic plots indicate that the hypotheses of the linear model for y based on iid Normal errors are satisfied? 
+
+Based on the model diagnostic plots, the residuals vs. fitted plot and scale location plots shows no clear patterns, the points are randomly spreade. The Q-Q plot also shows no signficant deviations from the straight line at the tails, therefore the assumption of normality holds. 
+
+```{r}
+
+# Formula for all possible combinations of variables
+formula_all <- y ~ . + I(x1^2) + I(x3^2) + I(x4^2) + I(x5^2) + I(x6^2)
+
+# Get the names of numeric variables
+numeric_vars <- names(dat.reg.sc)[sapply(dat.reg.sc, is.numeric)]
+
+# Remove x2 from the numeric variables
+numeric_vars <- setdiff(numeric_vars, "x2")
+
+# Create the formula
+formula_all <- as.formula(paste("y ~", paste(c(numeric_vars, "I(x1^2)", "I(x3^2)", "I(x4^2)", "I(x5^2)", "I(x6^2)"), collapse = " + ")))
+
+# Perform best subset selection
+best_subset <- regsubsets(formula_all, data = dat.reg.sc, nbest = 1, nvmax = 33)
+
+# Extract information about BIC
+bic_values <- summary(best_subset)$bic
+
+# Find the model with the lowest BIC
+best_model_index <- which.min(bic_values)
+best_model <- coef(best_subset, id = best_model_index)
+
+# Extract the formula for the best model
+best_predictors <- names(best_model)[-1]
+best_formula <- as.formula(paste("y ~", paste(best_predictors, collapse = " + ")))
+
+# Fit the best model
+best_model_fit <- lm(best_formula, data = dat.reg.sc)
+
+# Display the best model
+summary(best_model_fit)
+
+# Diagnostic plots
+par(mfrow = c(2, 2))
+plot(best_model_fit)
+
+
+
+```
+
+## Q2, part 6
+
+(5 points)
+
+Is the model using all the variables, pairwise interactions and squares a statistically significant improvement on the forward model according to an F-test?
+
+The p-value of 0.9887 is greater than the typical significance level of 0.05. Therefore, there is no significant improvement in fit by moving from Model 1 to the Full Model (Model 2).
+
+Is the model using all the variables, pairwise interactions and squares a statistically significant improvement according to an F-test on the best subset model for the number of variables that results in the lowest BIC among these models?
+
+
+
+```{r}
+# Full model with all variables, interactions, and squares
+full_model <- lm(y ~ (x1 + x2 + x3 + x4 + x5 + x6)^2 + I(x1^2) + I(x3^2) + I(x4^2) + I(x5^2) + I(x6^2), data = dat.reg.sc)
+
+# Perform F-tests
+anova_full_forward <- anova(final_forward_model, full_model)
+anova_full_best_subset <- anova(best_model_fit, full_model)
+
+# Output the results of the F-tests
+anova_full_forward
+anova_full_best_subset
+
+```
+## Q2, part 7
+
+(5 points)
+
+Consider the following models fit on the original training data, `dat.reg`. Which model performs better on the test data `dat.reg.test` in terms of the mean squared errors on the test data?
+
+Based on the output, the (m.trim.for.test) performs better on the test data compared to (m.big.for.test). This is evident from the lower mean squared error (MSE) value for the Trimmed Model (2160.174) compared to the Big Model (2362.853).
+
+```{r}
+#Big Model
+m.big.for.test<-lm(y~(x1+x2+x3+x4+x5+x6)^2+I(x1^2)+I(x3^2)+I(x4^2)+I(x5^2)+I(x6^2),data=dat.reg)
+
+#Trimmed Model
+m.trim.for.test<-lm(y~I(x1^2) + x1 + x2 + x4 + x5+x6 + x2:x3,data=dat.reg)
+
+# Define the function to calculate Mean Squared Error
+calculate_mse <- function(predictions, actual) {
+  mse <- mean((predictions - actual)^2)
+  return(mse)
+}
+
+# Predict using the models on test data
+predictions_big <- predict(m.big.for.test, newdata = dat.reg.test)
+predictions_trim <- predict(m.trim.for.test, newdata = dat.reg.test)
+
+# Calculate MSE for each model
+mse_big <- calculate_mse(predictions_big, dat.reg.test$y)
+mse_trim <- calculate_mse(predictions_trim, dat.reg.test$y)
+
+# Display
+cat("MSE for Trimmed Model:", mse_trim, "\n")
+cat("MSE for Trimmed Model:", mse_big, "\n")
+
+
+```
+
+# Question 3
+
+The simulated data in the file `dat1.RData` give leaf areas and trunk diameters of Populus deltoides trees sampled in different locations. The data are in the data frame `dat1` with columns `leaf`, `diameter` and `location`.
+
+```{r}
+
+load("dat1.RData")
+
+```
+
+
+## Q3, part 1
+
+(5 points)
+
+Please perform visual diagnostics appropriate to preparation for an ANOVA to investigate whether the leaf areas are consistent with the null hypothesis that the leaf areas in each location are drawn from populations with equal means. You may optionally include relevant statistical tests. Please state your conclusions about which, if any, hypotheses are violated.
+
+Based on the visual diagnostics the normality and equal variances assumptions are not met, suggesting that the variances of leaf areas are not equal across different locations
+
+```{r}
+# Visual Diagnostics
+# Boxplot
+boxplot(leaf ~ location, data = dat1, xlab = "Location", ylab = "Leaf Area", main = "Boxplot of Leaf Areas by Location")
+
+# Visual assessment of normality of residuals: QQ plot
+qqPlot(dat1$leaf, main = "Q-Q Plot of Leaf Areas")
+```
+
+## Q3, part 2
+
+(5 points)
+
+Now consider the data on the trunk diameters of the trees in the data frame `dat1` with columns "trunk" and "location". Please perform visual diagnostics appropriate to preparation for an ANOVA to investigate whether the trunk diameters are consistent with the null hypothesis that the trunk diameters in each location are drawn from populations with equal means. You may optionally include relevant statistical tests. Please state your conclusions about which, if any, hypotheses are violated. 
+
+Based on the visual diagnostics the normality and equal variances assumptions are met for the trunk diameters data, suggesting that the trunk diameters in each location are drawn from populations with equal means.
+
+```{r}
+# Visual Diagnostics
+# Boxplot
+boxplot(diameter ~ location, data = dat1, xlab = "Location", ylab = "Trunk Diameter", main = "Boxplot of Trunk Diameters by Location")
+
+# Visual assessment of normality of residuals: QQ plot
+qqPlot(dat1$diameter, main = "Q-Q Plot of residuals for Trunk diameters")
+```
+
+
+## Q3, part 3
+
+(5 points)
+
+Please construct a column plot of the means of trunk diameter for each location, including error bars equal at one standard deviation for the group mean above and below each group mean.
+
+```{r}
+# Means and standard deviations of trunk diameters for each location
+trunk_summary <- dat1 %>%
+  group_by(location) %>%
+  summarise(mean_trunk = mean(diameter),
+            sd_trunk = sd(diameter))
+
+# Column plot with error bars
+ggplot(trunk_summary, aes(x = location, y = mean_trunk, fill = location)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(aes(ymin = mean_trunk - sd_trunk, ymax = mean_trunk + sd_trunk),
+                width = 0.2, linewidth = 0.8, position = position_dodge(width = 0.9)) +
+  labs(title = "Mean Trunk Diameters by Location",
+       x = "Location",
+       y = "Mean Trunk Diameter") + scale_fill_discrete(name = "Location") +
+  theme_minimal()
+
+```
+
+
+## Q3, part 4
+
+(5 points)
+
+Please perform a 1-way ANOVA to investigate whether the trunk diameters are consistent with the null hypothesis that the trunk diameters in each location are drawn from populations with equal means. Please provide a tabular summary of the analysis. Please provide an interpretation of the results, taking into account your response to part 3. 
+
+The p-value is less than the significance level of 0.05,therefore we reject the null hypothesis that the trunk diameters in each location are drawn from populations with equal means.This means that the trunk diameters are not consistent across all locations, and at least one location differs significantly in mean trunk diameter from the others.
+```{r}
+# Perform 1-way ANOVA
+anova_model_trunk <- aov(diameter ~ location, data = dat1)
+summary(anova_model_trunk)
+
+
+```
+
+
+## Q3, part 5
+
+(5 points)
+
+Please perform a Tukey HSD test to investigate which locations have different mean trunk diameters. Please provide a tabular summary of the analysis. Please provide an interpretation of the results, taking into account your response to part 3.
+
+Locations (b-a) with a difference of -7.149901 and a p-value of 0.0474929 below the signifinace level of 0.05, show that significant differences are observed in mean trunk diameters.
+
+```{r}
+# Perform Tukey HSD test
+tukey_results <- TukeyHSD(anova_model_trunk)
+print(tukey_results)
+
+```
+
+## Question 4
+
+The simulated data in the file "dat2.RData" represent the results of a drug trial. Subjects used the drugs under one of two protocols: `supervised` and `home`. Subjects were recruited, then randomly assigned to one of 4 treatments, "treatment" and one of the two protocols. For each participant the amount `amt` of a biomarker was assessed. 
+
+```{r}
+
+load("dat2.RData")
+
+```
+
+
+
+
+### Q4, part 1
+
+(10 points)
+
+Both the amount of the biomarker and the log of the amount are of medical interest. Which variable (if either) from `amt` and `log(amt)` is best suited to an ANOVA to investigate whether the data are consistent with the null hypothesis that the mean level of the biomarker is equal for each protocol population, each treatment, and each interaction? Please explain your conclusion.
+
+The log-transformed variable log(amt) is best suited for the ANOVA analysis to investigate whether the data are consistent with the null hypothesis that the mean level of the biomarker is equal for each protocol population, each treatment, and each interaction. This is because based on the visual and quantitative analyses performed, the shapiro-wilk test for normality shows that 'amt' is not normally distributed given that its low p-value is less than the significance level.  Levene's test also indicates a violation of the homogeneity of variance assumption.
+
+```{r}
+
+# Addthe log-transformed amount of biomarker to the dataset
+dat2$log_amt <- log(dat2$amt)
+
+# Shapiro-Wilk test for normality
+shapiro.test(dat2$amt)#amt
+shapiro.test(dat2$log_amt)#log_amt
+
+
+# Levene's Test for equality of variances
+leveneTest(amt ~ protocol * treatment, data = dat2) #amt
+leveneTest(log_amt ~ protocol * treatment, data = dat2)#log_amt
+
+```
+
+### Q4, part 2
+
+(5 points)
+
+Please perform a 2-factor ANOVA with interaction using `log(amt)` as the response variable and `protocol` and `treatment` as the grouping variables. Please provide an interpretation of the results. In your interpretation, please address whether the interaction term is significant and whether the main effects are significant, taking into account your response to part 1.
+
+Based on the ANOVA results, both the interaction between protocol and treatment and the main effects of protocol and treatment are statistically significant in explaining the variation in the log biomarker levels (log(amt)) given their highly significant p-values.This means that the effect of the protocol on the log biomarker levels depends on the specific treatment, and vice versa. The protocol and treatment factors both also have independent effects on the log biomarker levels.
+
+
+```{r}
+
+# 2-factor ANOVA with interaction using `log(amt)`
+anova_interaction <- aov(log_amt ~ protocol * treatment, data = dat2)
+summary(anova_interaction)
+
+```
+
+
+
+
+## Question 5
+
+(10 points)
+
+To study effects of  5 genotypes on phenotype, researches collect cell samples from 5 individuals per genotype. For each individual, the level of expression of protein is measured in 15 cells. The data set `dat3` has columns `expression`, `genotype`, and `id`. Each row is the level of expression of the protein in a cell from the individual denoted by the `id` value. The genotype of the individual is noted in the `genotype` column. The researchers expect that the level of expression of the protein will vary by individual within genotype. 
+
+"Please carry out an ANOVA appropriate to this experimental design to investigate whether the data are consistent with the null hypothesis that, though individual expression levels may vary within a genotype, the mean level of expression of the protein is equal for each genotype. That is, the differences in genotype are not associated with systematic differences in average level of protein expression.   Please provide visual assessment of the extent to which the data satisfy the hypotheses necessary for interpreting ANOVA as a test of the null hypothesis. Please provide a tabular summary of the analysis. Please provide an interpretation of the results."
+
+Based on the visual assessment for homogeneity of variances, the assumption of equal variances across groups hold. The qq plot also shows normality.The ANOVA results having a p-value of 0.0288 suggests that there is a statistically significant difference in protein expression across genotypes therefore we reject the null hypothesis.
+
+```{r}
+
+load("dat3.RData")
+
+# Fitthe ANOVA model
+anova_model <- aov(expression ~ genotype, data = dat3)
+summary(anova_model)
+
+# Boxplot to check homogeneity of variances
+ggplot(data=dat3,aes(x=genotype,y=expression))+geom_boxplot()+
+  geom_jitter(aes(color=as.factor(id)),width=.1)+
+  theme(legend.position="none")+
+  labs(title="Expression of protein by genotype",
+  subtitle="colors represent individuals")
+
+# QQ plot to check normality of residuals
+ggqqplot(residuals(lm(expression ~ genotype, data = dat3))) +
+  labs(title = "QQ Plot of Residuals")
+  
+```
+
+

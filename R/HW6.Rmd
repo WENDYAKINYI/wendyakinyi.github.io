@@ -1,0 +1,490 @@
+---
+title: "Problem Set 6"
+author: "W. Akinyi"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Your solution document should have your answers to the questions and should display the requested plots.
+
+```{r include=FALSE }
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+library(AER)# for the data
+library(HistData)
+library(tinytex)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(tidyr)
+```
+
+
+# Question  1
+
+## Context 
+
+### Location of the Mean (Crash Fatality Data)
+
+The data set "USSeatBelts", data for the years 1983–1997 from 50 US States, plus the District of Columbia, for assessing traffic fatalities and seat belt usage, is in the "AER" package. Further details are available in the help for "USSeatBelts". These questions use the "state", "year", "fatalities", and "drinkage" variables. As detailed in the documentation, "fatalities" is the number of fatalities per million traffic miles and "drinkage" is a binary variable that is "yes" if the state had a minimum drinking age of 21 years and "no" otherwise.
+
+As can be seen from the tabulation below, by 1988, all the jurisdictions adopted a minimum drinking age of 21 years.
+
+```{r}
+data("USSeatBelts")
+table(USSeatBelts$year,USSeatBelts$drinkage)
+
+```
+
+The data can be reformatted as shown to have columns for each year's values of "fatalities" and "drinkage".
+
+```{r}
+dat<-USSeatBelts
+dat<-pivot_wider(dat,id_cols=state,names_from = year,values_from = c(fatalities,drinkage))
+
+```
+
+The parts of this question explore the relationship between fatalities per million traffic miles and the drinking age in the state.
+
+## Question 1, part 1
+
+(5 points)
+
+Using the data frame "dat", perform a visual check of whether the value of "fatalities" in 1983 minus the value of "fatalities" in 1988 among the 32 jurisdictions that had a value of "no" for "drinkage" in 1983 could be considered Normally distributed. The function "ggqqplot" in the "ggpubr" package may help. 
+
+Please display your choice of visualization and your interpretation.
+(The visual check using the QQ plot shows that the differences in fatalities between 1983 and 1988 among jurisdictions without a minimum drinking age of 21 in 1983 could be considered Normally distributed since most points on the QQ plot closely follow the y=x line.)
+
+```{r}
+# Jurisdictions with a "no" value for "drinkage" in 1983 filter
+dat_no_drinkage_1983 <- dat %>% filter(`drinkage_1983` == "no")
+
+# Difference in "fatalities" between 1983 and 1988 for the jurisdictions
+dat_no_drinkage_1983 <- dat_no_drinkage_1983 %>%
+  mutate(fatalities_diff_1983_1988 = `fatalities_1988` - `fatalities_1983`)
+
+# Visual check of the distribution of the differences using ggqqplot
+ggqqplot(dat_no_drinkage_1983$fatalities_diff_1983_1988, 
+         title = "QQ Plot of Fatalities Difference (1983 vs 1988) for Jurisdictions with No Drinkage Law in 1983",
+         xlab = "Theoretical Quantiles", 
+         ylab = "Sample Quantiles")
+
+
+```
+
+## Question 1, part 2
+
+(5 points)
+
+Using Student's t, test the hypothesis that the differences in "fatalities" between 1983 and 1988 for jurisdictions that went from "no" to "yes" in "drinkage" during this period are consistent with samples drawn from a Normal distribution with mean equal to 0. Please state your conclusions from the Student's t test including whether the test is a valid test of the location of the mean at 0.
+
+In 1983, a lower drinking age than 21 was used by the states not having a minimum drinking age of 21.
+
+https://en.wikipedia.org/wiki/U.S._history_of_alcohol_minimum_purchase_age_by_state (downloaded April 28, 2021)
+
+This analysis could be one step in examining the association between raised drinking age and traffic fatalities per million miles.   
+
+(Given the extremely low p-value of 1.839e-05, we reject the null hypothesis since it suggests strong evidence that the mean difference in fatalities is not 0 for jurisdictions transitioning from "no" to "yes" in "drinkage" between 1983 and 1988.
+Also considering the small p-value and the confidence interval not containing 0, the test appears to be valid for this dataset.)
+
+```{r}
+# Jurisdictions that transitioned from "no" to "yes" in "drinkage" between 1983 and 1988 filter
+dat_transition <- dat %>%
+  filter(`drinkage_1983` == "no" & `drinkage_1988` == "yes")
+
+# Differences in "fatalities" between 1983 and 1988 for these jurisdictions
+dat_transition <- dat_transition %>%
+  mutate(fatalities_diff_1983_1988 = `fatalities_1988` - `fatalities_1983`)
+
+# Student's t-test to test the hypothesis
+t_test_result <- t.test(dat_transition$fatalities_diff_1983_1988, mu = 0)
+
+# Print results
+print(t_test_result)
+
+```
+
+
+## Question 1, part 3
+
+(5 points)
+
+What is the 99% confidence interval for the mean of these differences? Is this confidence interval consistent with a drop in the fatality rate between 1983 and 1988?
+(The entire 99% confidence interval lies below 0,further supporting the rejection of the null hypothesis. This is an indication that the observed decrease in fatalities is statistically significant and not likely due to random chance. Therefore, the result is consistent with a drop in the fatality rate between 1983 and 1988 for these jurisdictions.)
+
+```{r}
+# Adjusting the t-test to obtain a 99% confidence interval
+t_test_result_99 <- t.test(dat_transition$fatalities_diff_1983_1988, mu = 0, conf.level = 0.99)
+
+# Print results
+print(t_test_result_99)
+```
+
+
+## Question 1, part 4
+
+(5 points)
+
+Can you conclude that the increased drinking age caused a reduction in the fatality rate? The calculation below may help you think about this question.
+
+Based on this calculation, the positive mean difference indicates an increase in fatalities rather than a reduction which suggests that there was an increase in fatalities per million traffic miles from 1983 to 1988 in jurisdictions that already had a minimum drinking age of 21 in 1983. This finding contrasts with the earlier analysis that showed a decrease in fatalities for jurisdictions transitioning from "no" to "yes" in drinkage. Therefore this requires further analysis in order to draw conclusions.
+
+```{r}
+fatal.diff.yes<-dat$fatalities_1983[dat$drinkage_1983=="yes"]-
+           dat$fatalities_1988[dat$drinkage_1983=="yes"]
+mean(fatal.diff.yes)
+
+```
+
+
+# Question 2
+
+## Context
+
+One often hears that the t-test is robust to moderate non-Normality in the population. The parts of this question explore this assertion.
+
+A type 1 error in a hypothesis test is the rejection of the null hypothesis when it is true. For the z-test and the t-test, suppose the sampled population has the null distribution and you have a threshold p-value $p$ below which you will reject the null hypothesis. For both tests, the probability of a type one error is exactly $p$.
+
+(A long explanation of this follows. You may understand this better thinking it through for yourself.
+
+The definition of the p-value of an observed statistic is the probability of a statistic at least as extreme as the observed statistic. For these tests, "as extreme as the observed statistic" can equivalently mean "as far from the median as, or further from the median than the observed statistic" or "having probability less or equal to that of the observed statistic". Let $X$ be the distribution of the statistic if the population has the null distribution. Note that the density function of $X$ for both the z-test and the t-test is symmetric around $0$. Let $x$ be the value for which the event $\{X|X\leq-x \textrm{ or } X\geq x\}$ has probability $p$. For these tests, exactly the values of the statistic in this event have p-values that are less than or equal to that of $x$. Thus the probability that the p-value is less than or equal to $p$ is the probability $p$ of the event $\{X|X\leq-x \textrm{ or } X\geq x\}$ for the specified value of x.) 
+
+In the work below, you will estimate the probability of a type 1 error using the t-test on data from a $Gamma$ distribution with mean $2\sqrt{2}$ and variance $4$ given the null hypothesis that the sample is from a $Normal$ population with $\mu_0=2\sqrt{2}$. You will estimate the probability of a type 1 error using the t-test on data from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ distribution, but with the values rounded to the nearest integer, given the null hypothesis that the sample is from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population.
+
+The goal is to gain an understanding of the extent to which the t-test remains a valid test of the location of the mean under these violations of the assumptions of the t-test as a test of the location of the mean.
+
+## Question 2, part 1
+
+(5 points)
+
+The goal is to estimate the proportion of $p\leq 0.01$ in a t-test of the null hypothesis that the population distribution is $Normal$ with $\mu_0=2\sqrt{2}$ but the sample is drawn from a $Gamma$ population with mean $\mu=2\sqrt{2}$ and variance $4$.
+
+The shape, scale, mean, and variance variables defined below are arranged so that changing the shape value will allow you to explore other $Normal$ and $Gamma$ distributions while retaining the property that they have the same mean and both have variance equal to 4.
+
+```{r}
+n<-20
+shp<-2
+scl<-sqrt(4/shp)
+sig<-sqrt(shp*scl^2) # sigma
+mu<-shp*scl # mu
+set.seed(12345)
+ggqqplot(rgamma(n,shape=shp,scale=scl))+labs(title="qq-plot for a Gamma sample")
+
+dat.plot<-data.frame(x=c(0,3*mu))
+ggplot(data=dat.plot,aes(x=x))+
+  stat_function(fun=dgamma, args=list(shape=shp,scale=scl))+
+  stat_function(fun=dgamma, args=list(shape=1,scale=sqrt(4/2)),color="orange")+
+stat_function(fun=dgamma, args=list(shape=1.5,scale=sqrt(4/1.5)),color="green")+
+  stat_function(fun=dgamma, args=list(shape=2.5,scale=sqrt(4/1.5)),color="blue")+
+  labs(title="A Collection of Gamma Densities")
+
+```
+
+Suppose an iid sample of size "n" is drawn from population with a $Gamma(shape=2,scale=\sqrt{2})$ distribution. Note that the mean of this distribution is $2\sqrt{2}$ and the variance is $4$. Let the null hypothesis be that the sample is drawn from a $Normal$ population with $\mu_0=2\sqrt{2}$ population. 
+
+A) Please use 100,000 samples of size 5 to estimate the probability that a two-sided t-test performed on the sample of size 5 from a $Gamma(shape=2,scale=\sqrt{2})$ population will have a p-value that is less than or equal to 0.01. What is your estimate? (0.02823)
+
+```{r}
+
+# Function to perform a two-sided t-test on a sample from a Gamma distribution
+# and return the p-value
+t.p.val.true <- function(a = shp, s = scl, n = 5) {
+  # Sample from a Gamma distribution with given shape and scale
+  samp <- rgamma(n, shape = a, scale = s)
+  # Two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(1234567)
+
+# Using 100,000 samples of size 5 from a Gamma distribution
+ps.gamma.true.5 <- replicate(100000, t.p.val.true(n = 5))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01 <- sum(ps.gamma.true.5 <= 0.01) / length(ps.gamma.true.5)
+
+# Print the estimated proportion
+print(prop.le.01)
+
+```
+
+B) Please use 100,000 samples of size 20 to estimate the probability that a two-sided t-test performed on the sample of size 20 from a $Gamma(shape=2,scale=\sqrt{2})$ population will have a p-value that is less than or equal to 0.01. What is your estimate? (0.02219)
+
+```{r}
+# Function to perform a two-sided t-test on a sample from a Gamma distribution
+# and return the p-value
+t.p.val.true <- function(a = shp, s = scl, n = 20) {
+  # Sample from a Gamma distribution with given shape and scale
+  samp <- rgamma(n, shape = a, scale = s)
+  # Two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(1234567)
+
+# # Using 100,000 samples of size 20 from a Gamma distribution
+ps.gamma.true.20 <- replicate(100000, t.p.val.true(n = 20))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.20 <- mean(ps.gamma.true.20 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.20)
+```
+C) Please use 100,000 samples of size 50 to estimate the probability that a two-sided t-test performed on the sample of size 50 from a $Gamma(shape=2,scale=\sqrt{2})$ population will have a p-value that is less than or equal to 0.01. What is your estimate? (0.0157)
+
+```{r}
+# Function to perform a two-sided t-test on a sample from a Gamma distribution
+# and return the p-value
+t.p.val.true <- function(a = shp, s = scl, n = 50) {  
+  # Sample from a Gamma distribution with given shape and scale
+  samp <- rgamma(n, shape = a, scale = s)
+  # Perform a two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(1234567)
+
+# Using 100,000 samples of size 50 from a Gamma distribution
+ps.gamma.true.50 <- replicate(100000, t.p.val.true(n = 50))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.50 <- mean(ps.gamma.true.50 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.50)
+```
+
+D) Please use 100,000 samples of size 100 to estimate the probability that a two-sided t-test performed on the sample of size 100 from a $Gamma(shape=2,scale=\sqrt{2})$ population will have a p-value that is less than or equal to 0.01. What is your estimate? (0.01364)
+
+```{r}
+# Function to perform a two-sided t-test on a sample from a Gamma distribution
+# and return the p-value
+t.p.val.true <- function(a = shp, s = scl, n = 100) {  
+  # Sample from a Gamma distribution with given shape and scale
+  samp <- rgamma(n, shape = a, scale = s)
+  # Perform a two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(1234567)
+
+# Using 100,000 samples of size 100 from a Gamma distribution
+ps.gamma.true.100 <- replicate(100000, t.p.val.true(n = 100))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.100 <- mean(ps.gamma.true.100 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.100)
+
+```
+## Question 2, part 2
+
+(5 points)
+
+The goal is to estimate the proportion of $p\leq 0.01$ in a t-test of the null hypothesis that the population distribution is $Normal$ with $\mu_0=2\sqrt{2}$ if the sample is drawn from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population then rounded to the nearest integer.
+
+Suppose an iid sample of size "n" is drawn from population with a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ distribution except that the values are rounded to the nearest integer (see the "round" function). Let the null hypothesis be that the sample is drawn from a $Normal$ population with $\mu_0=2\sqrt{2}$. 
+
+A) Please use 100,000 samples of size 10 to estimate the probability that a two-sided t-test performed on the sample of size 10 from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population, rounded to the nearest integer, will have a p-value that is less than or equal to 0.01.
+Please give your estimate.(0.01051)
+
+```{r}
+
+# Function to perform a two-sided t-test on a rounded sample from a Normal distribution
+# and return the p-value
+t.p.val.round.true <- function(n = 10) {
+  # Sample from a Normal distribution with mean 2*sqrt(2) and variance 4, rounded to the nearest integer
+  samp <- round(rnorm(n, mean = 2*sqrt(2), sd = 2))
+  # Two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(123456)
+
+# Using 100,000 p-values from the t-test on rounded samples of size 10 from a Normal distribution
+ps.round.true.10 <- replicate(100000, t.p.val.round.true(n = 10))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.round.10 <- mean(ps.round.true.10 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.round.10)
+```
+
+B) Please use 100,000 samples of size 20 to estimate the probability that a two-sided t-test performed on the sample of size 20 from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population, rounded to the nearest integer, will have a p-value that is less than or equal to 0.01.
+Please give your estimate.(0.00982)
+
+```{r}
+# Function to perform a two-sided t-test on a rounded sample from a Normal distribution
+# and return the p-value
+t.p.val.round.true <- function(n = 20) {
+  # Sample from a Normal distribution with mean 2*sqrt(2) and variance 4, rounded to the nearest integer
+  samp <- round(rnorm(n, mean = 2*sqrt(2), sd = 2))
+  # Two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(123456)
+
+# Using 100,000 p-values from the t-test on rounded samples of size 20 from a Normal distribution
+ps.round.true.20 <- replicate(100000, t.p.val.round.true(n = 20))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.round.20 <- mean(ps.round.true.20 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.round.20)
+
+```
+
+C) Please use 100,000 samples of size 50 to estimate the probability that a two-sided t-test performed on the sample of size 100 from a $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population, rounded to the nearest integer, will have a p-value that is less than or equal to 0.01.
+Please give your estimate.(0.00984)
+
+```{r}
+# Function to perform a two-sided t-test on a rounded sample from a Normal distribution
+# and return the p-value
+t.p.val.round.true <- function(n = 50) {
+  # Generate a sample from a Normal distribution with mean 2*sqrt(2) and variance 4, rounded to the nearest integer
+  samp <- round(rnorm(n, mean = 2*sqrt(2), sd = 2))
+  # Perform a two-sided t-test to compare the sample mean to the hypothesized mean
+  # Null hypothesis: mean = 2*sqrt(2)
+  p.value <- t.test(samp, mu = 2*sqrt(2))$p.value
+  return(p.value)
+}
+
+# Set seed for reproducibility
+set.seed(123456)
+
+# Using 100,000 p-values from the t-test on rounded samples of size 50 from a Normal distribution
+ps.round.true.50 <- replicate(100000, t.p.val.round.true(n = 50))
+
+# Estimate probability that a two-sided t-test having p-values less than or equal to 0.01
+prop.le.01.round.50 <- mean(ps.round.true.50 <= 0.01)
+
+# Print the estimated proportion
+print(prop.le.01.round.50)
+
+```
+
+# Question 3
+
+The following questions ask for a summary of the robustness of the t-test to non-Normality and rounding.
+
+The function "uniform.qq" provided below is a visualization tool that creates a qq-plot comparing the quantiles of a vector "x" to the quantiles of a Uniform distribution on $(0,1)$. The indices of the sorted vector are used as the quantiles for the Uniform distribution because the $q^{th}$ quantile of the Uniform distribution on  $(0,1)$ is just $q$.
+
+The function "uniform.qq.focused" restricts the plot to p-values less than or equal to 0.1, those most relevant for typical hypothesis tests and confidence intervals.
+
+```{r }
+uniform.qq<-function(x){
+  dat.this<-data.frame(ind=(1:length(x))/length(x),p=sort(x))
+  ggplot(dat.this,aes(x=ind,y=p))+geom_point()+
+    geom_abline(slope=1, intercept=0,color="orange")
+}
+
+uniform.qq.focused<-function(x){
+  dat.this<-data.frame(ind=(1:length(x))/length(x),p=sort(x))
+  dat.this<-filter(dat.this,p<=.1)
+  ggplot(dat.this,aes(x=ind,y=p))+geom_point()+
+    geom_abline(slope=1, intercept=0,color="orange")
+}
+
+```
+
+
+## Question 3, part 1
+
+(10 points)
+
+In the examples above, does the correctness of the p-value of the t-test seem to be strongly affected by the change from the $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population to the $Gamma(shape=2,scale=\sqrt{2})$ population?
+(Given that the plot generated by the uniform.qq.focused function is just a straight 45-degree line from the origin, indicates that the p-values obtained from the t-tests for both the Normal and Gamma distributions are uniformly distributed. This implies that the t-test is robust to the deviation from normality in this specific scenario.
+
+Also having such a uniform distribution of p-values in the QQ-plot suggests that the t-test is not strongly affected by the change from the Normal distribution to the Gamma distribution in terms of the correctness of the p-values. This result indicates that the t-test is maintaining its validity even when the underlying data distribution deviates from normality.)
+
+
+Optional visualization:
+
+```{r}
+
+# Generating sample data
+set.seed(123) # For reproducibility
+n <- 100 # Sample size
+
+# Normal distribution: N(2√2, 4)
+normal_samples <- rnorm(n, mean = 2 * sqrt(2), sd = sqrt(4))
+
+# Gamma distribution: Gamma(shape=2, scale=√2)
+gamma_samples <- rgamma(n, shape = 2, scale = sqrt(2))
+
+# Assuming we're comparing to a theoretical mean,say, 3
+t_test_normal <- t.test(normal_samples, mu = 3)
+t_test_gamma <- t.test(gamma_samples, mu = 3)
+
+# Extracting p-values
+p_values <- c(t_test_normal$p.value, t_test_gamma$p.value)
+
+# Visualizing p-values
+uniform.qq.focused(p_values)
+```
+
+## Question 3, part 2
+
+(10 points)
+
+In the examples above, does the correctness of the p-value of the t-test seem to be strongly affected by the change from the $Normal(\mu=2\sqrt{2},\sigma^2=4)$ population to the rounded $Normal(\mu=2\sqrt{2},\sigma^2=4)$ values? 
+
+(Rounding the data from the Normal distribution with mean $2\sqrt{2}$ and variance $4$ does not significantly affect the correctness of the p-values obtained from the t-tests. The uniform distribution of p-values indicates that the rounding process does not introduce bias or distort the results of the hypothesis tests.)
+
+
+
+Optional visualization:
+
+```{r}
+# Generating sample data from Normal distribution: N(2√2, 4)
+original_samples <- rnorm(n, mean = 2 * sqrt(2), sd = sqrt(4))
+
+# Rounding the sample data
+rounded_samples <- round(original_samples)
+
+# Performing t-tests comparing to a theoretical mean, say, 3
+t_test_original <- t.test(original_samples, mu = 3)
+t_test_rounded <- t.test(rounded_samples, mu = 3)
+
+# Extracting p-values
+p_values_original <- t_test_original$p.value
+p_values_rounded <- t_test_rounded$p.value
+
+# Visualizing p-values for original data
+print("QQ-plot for Original Data")
+uniform.qq.focused(rep(p_values_original, times = n))
+
+# Visualizing p-values for rounded data
+print("QQ-plot for Rounded Data")
+uniform.qq.focused(rep(p_values_rounded, times = n))
+```
+
+

@@ -1,0 +1,226 @@
+---
+title: "Problem Set 8"
+author: "Wendy Akinyi"
+date: "2/29/2024"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nortest)
+library(ggpubr)
+library(MASS)
+library(lawstat)
+library(HistData)
+library(tinytex)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(car)
+library(stats)
+
+
+```
+
+# Introduction
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please generate your solutions in R markdown and upload both a knitted doc, docx, or pdf document in addition to the Rmd file. Please be sure that the knitted document displays the results of your calculations.
+
+# Question 1
+
+These birth records are simple random samples from the birth records from November 2019 and November 2020 from the CDC. The data are available at:
+https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm
+
+The following questions are oriented toward testing the null hypothesis that the mean birth weight in November 2019 (pre-covid) is the same as the mean birth weight in November 2020 (during covid).
+
+
+```{r}
+
+load("dat_birth.RData")
+
+
+```
+
+## Q1, part 1
+
+(10 points)
+
+Using a visual method, please check the normality of the birth weight data, in grams, for 2019 and 2020 separately. What do you conclude? 
+
+For the 2019 data, the Q-Q plot shows that the data points closely follow the diagonal line, indicating that the data is approximately normally distributed. However, the histogram shows deviation from normality, with significant left skewness.
+
+For the 2020 data, while the Q-Q plot shows that most data points closely follow the diagonal line,there is a significant number of points that are further away from the diagonal line indicating a slight presence outliers.However, the histogram seems to be more symmetric, but still slightly left skewed,but much less pronounced than the in 2019.
+
+Conclusion: The birth weight data for both years deviates from a perfectly normal distribution. The 2019 data shows more pronounced skewness.The 2020 data is closer to a symmetric distribution but still exhibits heavier tails compared to a normal distribution.
+```{r}
+# Data split by year
+data_2019 <- subset(dat.birth, year == 2019)
+data_2020 <- subset(dat.birth, year == 2020)
+
+# Visual check for normality for 2019 birth weight data
+# Histogram for 2019
+ggplot(data_2019, aes(x = dbwt)) +
+  geom_histogram(aes(y = ..density..), binwidth = 100, fill = "lightblue", color = "black") +
+  geom_density(alpha = .2, fill = "#FF9999") +
+  ggtitle("Histogram of Birth Weights for 2019") +
+  xlab("Birth Weight (grams)") +
+  ylab("Density")
+
+
+# Q-Q plot for 2019
+qqnorm(data_2019$dbwt, main = "Q-Q Plot of Birth Weights for 2019")
+qqline(data_2019$dbwt, col = "red")
+
+
+# Visual check for normality for 2020 birth weight data
+# Histogram for 2020
+ggplot(data_2020, aes(x = dbwt)) +
+  geom_histogram(aes(y = ..density..), binwidth = 100, fill = "lightgreen", color = "black") +
+  geom_density(alpha = .2, fill = "#FF9999") +
+  ggtitle("Histogram of Birth Weights for 2020") +
+  xlab("Birth Weight (grams)") +
+  ylab("Density")
+
+
+# Q-Q plot for 2020
+qqnorm(data_2020$dbwt, main = "Q-Q Plot of Birth Weights for 2020")
+qqline(data_2020$dbwt, col = "red")
+
+```
+
+## Q1, part 2
+
+(5 points)
+
+Using a visual method or an analytic method, please check the equality of variance of the birth weight data for 2019 and 2020. What do you conclude?
+
+Since the p-value of 0.669 is greater than the typical significance level of 0.05. we fail to reject the null hypothesis.
+Also based on the box plot, there is no significant difference in the interquartile ranges, therefore no significant evidence to suggest that the variances of the birth weight data for 2019 and 2020 are different.
+```{r}
+# Combined data for plotting
+combined_data <- rbind(data_2019, data_2020)
+combined_data$year <- as.factor(combined_data$year)
+
+# Levene's test for equality of variances
+leveneTest(dbwt ~ year, data = combined_data)
+
+# Boxplot to visually inspect variance
+library(ggplot2)
+ggplot(combined_data, aes(x = year, y = dbwt, fill = year)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Birth Weights by Year",
+       x = "Year",
+       y = "Birth Weight (grams)") +
+  scale_fill_manual(values = c("2019" = "lightblue", "2020" = "lightgreen"))
+```
+
+## Q1, part 3
+
+(5 points)
+
+Please perform a pooled sample t-test to test the null hypothesis that the mean birth weight in November 2019 is the same as the mean birth weight in November 2020. You will address interpretation and the appropriateness of the test in part 6.
+
+```{r}
+# Pooled Sample T-test
+t_test <- t.test(data_2019$dbwt, data_2020$dbwt, var.equal = TRUE)
+
+# Print the t-test results
+print(t_test)
+
+
+```
+
+## Q1, part 4
+
+(5 points)
+
+please perform a Welch's t-test to test the null hypothesis that the mean birth weight in November 2019 is the same as the mean birth weight in November 2020. You will address the interpretation and appropriateness of the test in part 6. 
+
+```{r}
+# Welch's t-test
+welch_test <- t.test(data_2019$dbwt, data_2020$dbwt)
+
+# Print the Welch's t-test results
+print(welch_test)
+
+```
+
+## Q1, part 5
+
+(5 points)
+
+Please perform a Mann-Whitney U test comparing the birth weights in November 2019 to the birth weights in November 2020. You will address the interpretation and appropriateness of the test in part 6.
+
+
+```{r}
+# Mann-Whitney U test
+mannwhitney_test <- wilcox.test(data_2019$dbwt, data_2020$dbwt)
+
+# Print the Mann-Whitney U test results
+print(mannwhitney_test)
+
+#Density plot of Birth Weights
+ggplot(dat.birth, aes(color = factor(year), x = dbwt)) +
+  geom_density() +
+  labs(title = "Density Plot of Birth Weights for November 2019 and 2020",
+       x = "Birth Weight (grams)",
+       y = "Density") +
+  scale_color_manual(values = c("blue", "orange"))
+
+```
+
+## Q1, part 6
+
+(10 points)
+
+Given the results of the visualizations and the tests in parts 3-5, what is your conclusion about the null hypothesis that the mean birth weight in November 2019 is the same as the mean birth weight in November 2020? On what do you base your conclusion?
+
+The analysis suggests that there is no significant difference in the mean birth weight of babies born in November 2019 compared to November 2020. 
+
+This conclusion is based on the consistency across the different types of analyses;
+-The failure to reject the null hypothesis in both the pooled and Welch's t-tests, indicating no significant difference in mean birth weights.
+-The Mann-Whitney U test, which also did not find a significant difference in the distributions of birth weights between the two years.
+
+# Question 2
+
+(10 points)
+
+In some applications, such as power analyses, the *effect size* is necessary. For a two sample t-test (with pooled standard deviation) of the equality of the means of an outcome $\{x_1,...x_{n_X}\}$ from group $A$ and $\{y_1,...y_{n_Y}\}$ from group $B$ , the effect size is the absolute value of the difference between means in the two groups, $|\bar{x}-\bar{y}|$ divided by the pooled standard deviation $S=\sqrt{\frac{\sum_{i=1}^{n_X}(x_i-\bar{x})^2+\sum_{i=1}^{n_Y}(y_i-\bar{y})^2}{n_X+n_Y-2}}$. Suppose you are using an existing report to estimate the effect size for a two sample t-test. The report states that the p-value for a pooled sample t-test of the difference in means is $0.043$ and that $n_X=28$ and $n_Y=30$. What is the effect size?
+
+
+
+```{r}
+  # Calculate effect size function using p-value, nX, and nY
+  calculate_effect_size <- function(p_value, nX, nY) {
+  # Degrees of freedom
+  df <- nX + nY - 2
+  
+  # Reconstructing the t-statistic from the p-value and df
+  t_stat <- abs(qt(p_value / 2, df, lower.tail = FALSE))
+  
+  # Pooled standard deviation multiplier from the effect size formula
+   pooled_sd_multiplier <- sqrt(1/nX + 1/nY)
+  
+  # Effect size calculation
+  effect_size <- t_stat * pooled_sd_multiplier
+  
+  return(effect_size)
+}
+
+  # Given values from the report
+  p_value <- 0.043
+  nX <- 28
+  nY <- 30
+
+  # Calculate effect size
+  effect_size <- calculate_effect_size(p_value, nX, nY)
+
+  # Print result
+  print(paste("Calculated effect size:", effect_size))
+
+```

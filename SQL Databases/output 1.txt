@@ -1,0 +1,109 @@
+-- 1 --
+# team_id	league	division	name
+ARI	NL	W	Arizona Diamondbacks
+ATL	NL	E	Atlanta Braves
+BAL	AL	E	Baltimore Orioles
+BOS	AL	E	Boston Red Sox
+CHA	AL	C	Chicago Cubs
+CHN	NL	C	Chicago White Sox
+CIN	NL	C	Cincinnati Reds
+CLE	AL	C	Cleveland Indians
+COL	NL	W	Colorado Rockies
+DET	AL	C	Detroit Tigers
+HOU	AL	W	Houston Astros
+KCA	AL	C	Kansas City Royals
+LAA	AL	W	Los Angeles Angels of Anaheim
+LAN	NL	W	Los Angeles Dodgers
+MIA	NL	E	Miami Marlins
+MIL	NL	C	Milwaukee Brewers
+MIN	AL	C	Minnesota Twins
+NYA	AL	E	New York Yankees
+NYN	NL	E	New York Mets
+OAK	AL	W	Oakland Athletics
+PHI	NL	E	Philadelphia Phillies
+PIT	NL	C	Pittsburgh Pirates
+SDN	NL	W	San Diego Padres
+SEA	AL	W	Seattle Mariners
+SFN	NL	W	San Francisco Giants
+SLN	NL	C	St. Louis Cardinals
+TBA	AL	E	Tampa Bay Rays
+TEX	AL	W	Texas Rangers
+TOR	AL	E	Toronto Blue Jays
+WAS	NL	E	Washington Nationals
+
+-- 2 --
+# largest_complete_games
+6
+
+-- 3 --
+# number_of_players
+8
+
+-- 4 --
+# biggest_difference
+7091
+
+-- 5 --
+# average_opponents_batting_avg
+0.24125222551928774
+
+-- 6 --
+# biggest_attendance	smallest_attendance	attendance_difference
+3782337	                 1437393	        2344944
+
+-- 7 --
+# park
+Angel Stadium of Anaheim
+AT&T Park
+Busch Stadium III
+Chase Field
+Citi Field
+Citizens Bank Park
+Comerica Park
+Coors Field
+Dodger Stadium
+Fenway Park II
+Great American Ball Park
+Kauffman Stadium
+Marlins Park
+Miller Park
+Minute Maid Park
+Nationals Park
+Oriole Park at Camden Yards
+Petco Park
+PNC Park
+Progressive Field
+Rangers Ballpark in Arlington
+Safeco Field
+Target Field
+Tropicana Field
+Turner Field
+U.S. Cellular Field
+Wrigley Field
+Yankee Stadium III
+
+-- 8 --
+# teams_with_multiple_managers
+1
+1
+1
+
+-- 9 --
+# highest_stolen_base_percentage
+0.9643
+
+-- 10 --
+# name	               league WON_WS   WON_LG  WON_DIV	WON_WC
+San Francisco Giants	NL	Y	Y	N	Y
+Kansas City Royals	AL	N	Y	N	Y
+Baltimore Orioles	AL	N	N	Y	N
+Detroit Tigers	        AL   	N	N	Y	N
+Los Angeles Angels of Anaheim	AL	N	N	Y	N
+Los Angeles Dodgers	NL	N	N	Y	N
+St. Louis Cardinals	NL	N	N	Y	N
+Washington Nationals	NL	N	N	Y	N
+Oakland Athletics	AL	N	N	N	Y
+Pittsburgh Pirates	NL	N	N	N	Y
+
+
+

@@ -1,0 +1,93 @@
+-- 1 --
+# name_last
+  Altuve
+  Cabrera
+  Lucroy
+
+-- 2 --
+# name_last
+  Altuve
+  Cabrera
+  Lucroy
+
+-- 3 --
+# name_last	doubles
+  Lucroy	53
+  Cabrera	52
+  Altuve	47
+
+-- 4 --
+# team_name	                wins
+Los Angeles Angels of Anaheim	98
+Baltimore Orioles	        96
+Washington Nationals	        96
+Los Angeles Dodgers	        94
+Detroit Tigers	                90
+St. Louis Cardinals	        90
+Kansas City Royals	        89
+Oakland Athletics	        88
+Pittsburgh Pirates	        88
+San Francisco Giants	        88
+Seattle Mariners	        87
+Cleveland Indians	        85
+New York Yankees	        84
+Toronto Blue Jays	        83
+Milwaukee Brewers	        82
+
+-- 5 --
+# name_first	name_last	hit_by_pitch
+Charlie	        Morton	        19
+
+-- 6 --
+# name_first	name_last	height	team_name
+Terry	         Collins	69	New York Mets
+Rich	         Renteria	69	Chicago White Sox
+Buck	         Showalter	69	Baltimore Orioles
+
+-- 7 --
+#output1
+# name_first	name_last	k_bb_ratio
+Phil	          Hughes	11.6250
+Sean	         Doolittle	11.1250
+Joakim	           Soria	10.5000
+Koji	          Uehara	10.0000
+Chad	          Qualls	8.6000
+Joe	        Thatcher	8.3333
+Clayton	         Kershaw	7.7097
+Pat	          Neshek	7.5556
+Hisashi	         Iwakuma	7.3333
+Josh	          Tomlin	6.7143
+
+#output2
+# name_first	name_last	k_bb_ratio
+Phil	          Hughes	11.6250
+Sean	       Doolittle	11.1250
+Koji	          Uehara	10.0000
+Chad	          Qualls	8.6000
+Joakim	           Soria	8.0000
+Clayton	         Kershaw	7.7097
+Pat	          Neshek	7.5556
+Hisashi	         Iwakuma	7.3333
+David	           Price	7.1316
+Joe	        Thatcher	6.7500
+
+-- 8 --
+# team_id
+BAL
+CHA
+CIN
+HOU
+LAA
+LAN
+MIA
+PHI
+
+-- 9 --
+# player_id
+dunnad01
+snidetr01
+
+-- 10 --
+VIEW mlb_national CREATED.
+
+

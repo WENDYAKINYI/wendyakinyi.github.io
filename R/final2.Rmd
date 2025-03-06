@@ -1,0 +1,490 @@
+---
+title: "Final Exam"
+author: "W.Akinyi"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(MASS)
+library(tidyverse)
+library(leaps)
+library(caret)
+library(glmnet)
+library(ResourceSelection)
+library(DescTools)
+```
+
+## Instructions
+
+Please complete the questions on this template and upload your solutions in a single knitted Word or pdf document. Please also upload your completed template. Please keep output concise. For example, please don't display large data sets or large models unless asked, and please set "trace=0" for models fit with "step".
+
+In light of the exam context, the data sets for the questions have been generated clearly to satisfy or obviously to violate the requirements of the statistical procedures. If reasonable exploratory analysis is done, there should be little ambiguity as to whether the given data satisfy the requirements. This is unrealistic, but less stressful for students and graders alike. 
+
+# Question 1
+
+## Question 1, part 1
+
+(10 points)
+
+For "dat.train", extracted below from "dats", the code below fits a logistic regression model of `y` on the variables `V1` through `V12`. Suppose that the predicted probability that $y=1$ is equal to $0.75$ for a case $c$. Suppose the values of the explanatory variables for another case $\tilde{c}$ are the same as for $c$ except that the value of $V6$ is larger by $0.5$ in the case of $\tilde{c}$. Please fitted probability that $y=1$ for $\tilde{c}$.
+
+
+```{r}
+load("dats.RData")
+dat.train<-dats[["train"]]
+dat.valid<-dats[["valid"]]
+dat.test<-dats[["test"]]
+m<-glm(y~V1+V2+V3+V4+V5+V6+V7+V8+V9+V10+V11+V12,data=dat.train,family="binomial")
+summary(m)
+
+
+# Predicted probability that y=1 is equal to 0.75 for case c
+prob_c <- 0.75
+
+# Calculate the log-odds for case c
+log_odds_c <- log(prob_c / (1 - prob_c))
+
+# Extract the coefficient for V6 from the model
+coef_V6 <- coef(m)["V6"]
+
+# Calculate the log-odds for case \tilde{c}, where V6 is increased by 0.5
+log_odds_tilde_c <- log_odds_c + coef_V6 * 0.5
+
+# Calculate the fitted probability that y=1 for case \tilde{c}
+prob_tilde_c <- exp(log_odds_tilde_c) / (1 + exp(log_odds_tilde_c))
+
+# Print the fitted probability for case \tilde{c}
+print(prob_tilde_c)
+```
+
+
+## Question 1, part 2
+
+(10 points)
+
+Please give the output of the Hosmer-Lemeshow test with default parameters on the model fit in part 1. Does the result of Hosmer-Lemeshow test provide evidence that the data are not consistent with the logistic regression model?
+
+The result of the Hosmer-Lemeshow test does not provide evidence that the data are not consistent with the logistic regression model having a p-value greater than 0.05.
+
+```{r}
+# Perform the Hosmer-Lemeshow test with default parameters
+hl_test <- hoslem.test(dat.train$y, fitted(m))
+
+# Print the result
+print(hl_test)
+
+
+
+
+```
+
+## Question 1, part 2
+
+(10 points)
+
+Please supply the following information for model fit in part 1 on the training data and for the predictions of the model when applied to `dat.valid`.
+
+#### The confusion matrix, training and validation
+
+```{r}
+# Function to calculate confusion matrix
+calculate_confusion_matrix <- function(predictions, actuals) {
+  table(Predicted = predictions, Actual = actuals)
+}
+# Predictions on training data
+train_predictions <- ifelse(predict(m, dat.train, type = "response") > 0.5, 1, 0)
+train_confusion_matrix <- calculate_confusion_matrix(train_predictions, dat.train$y)
+
+# Predictions on validation data
+valid_predictions <- ifelse(predict(m, dat.valid, type = "response") > 0.5, 1, 0)
+valid_confusion_matrix <- calculate_confusion_matrix(valid_predictions, dat.valid$y)
+
+# Print confusion matrices
+cat("Confusion Matrix - Training Data:\n")
+print(train_confusion_matrix)
+cat("\nConfusion Matrix - Validation Data:\n")
+print(valid_confusion_matrix)
+
+```
+
+#### Accuracy, training and validation
+
+```{r}
+
+# Function to calculate accuracy
+calculate_accuracy <- function(confusion_matrix) {
+  sum(diag(confusion_matrix)) / sum(confusion_matrix)
+}
+
+# Calculate metrics for training data
+train_accuracy <- calculate_accuracy(train_confusion_matrix)
+
+# Calculate metrics for validation data
+valid_accuracy <- calculate_accuracy(valid_confusion_matrix)
+
+# Print accuracy
+cat("\nAccuracy - Training Data: ", train_accuracy, "\n")
+cat("Accuracy - Validation Data: ", valid_accuracy, "\n")
+```
+
+#### Precision, training and validation
+
+```{r}
+# Function to calculate precision
+calculate_precision <- function(confusion_matrix) {
+  confusion_matrix[2, 2] / sum(confusion_matrix[2, ])
+}
+
+# Calculate metrics for training data
+train_precision <- calculate_precision(train_confusion_matrix)
+
+# Calculate metrics for validation data
+valid_precision <- calculate_precision(valid_confusion_matrix)
+
+# Print precision
+cat("\nPrecision - Training Data: ", train_precision, "\n")
+cat("Precision - Validation Data: ", valid_precision, "\n")
+
+```
+
+#### Recall:
+
+```{r}
+# Function to calculate recall
+calculate_recall <- function(confusion_matrix) {
+  confusion_matrix[2, 2] / sum(confusion_matrix[, 2])
+}
+
+# Calculate metrics for training data
+train_recall <- calculate_recall(train_confusion_matrix)
+
+# Calculate metrics for validation data
+valid_recall <- calculate_recall(valid_confusion_matrix)
+
+# Print recall
+cat("\nRecall - Training Data: ", train_recall, "\n")
+cat("Recall - Validation Data: ", valid_recall, "\n")
+
+```
+
+#### F1, training and validation:
+
+```{r}
+# Function to calculate F1 score
+calculate_f1 <- function(precision, recall) {
+  2 * (precision * recall) / (precision + recall)
+}
+
+# Calculate metrics for training data
+train_f1 <- calculate_f1(train_precision, train_recall)
+
+# Calculate metrics for validation data
+valid_f1 <- calculate_f1(valid_precision, valid_recall)
+
+# Print F1 score
+cat("\nF1 Score - Training Data: ", train_f1, "\n")
+cat("F1 Score - Validation Data: ", valid_f1, "\n")
+```
+
+# Question 2
+
+
+
+In this question, we consider the logistic regression model of `y` in `dat.train` on  the explanatory variables `V1` through `V12`, the backward model selected from these variables on the basis of AIC, the ridge regression models corresponding to "lambda.min" and to "lambda.1se", and the lasso regression models corresponding to "lambda.min" and to "lambda.1se". For each model, we report and record the deviance on the validation set, `dat.valid`.
+
+Finally, we select a model based on the validation deviances and calculate and report the mean deviance on "dat.train", "dat.valid", and "dat.test".
+
+```{r}
+# You may use this function.
+dev.get<-function(y, yhat){
+  return(-2*sum(y*log(yhat)+(1-y)*log(1-yhat)))
+} 
+```
+
+## Question 2, part 1
+
+(10 points)
+
+Please calculate and display the validation deviance of the full model y ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V12 fit above on "dat.train" 
+
+```{r}
+
+name.vec<-c() # Create a vector to store the model names
+dev.vec<-c() # Create a vector to store the validation deviance corresponding to each model
+
+
+# Predict on validation set
+full.pred <- predict(m, newdata = dat.valid, type = "response")
+
+# Calculate validation deviance
+full.dev <- dev.get(dat.valid$y, full.pred)
+
+# Store results
+name.vec<-c(name.vec,"full")
+dev.vec<-c(dev.vec,full.dev)
+
+
+# Print results
+cat("Validation Deviance for Full Model:", full.dev, "\n")
+
+
+```
+
+## Question 2, part 2
+
+(10 points)
+
+Please fit the the backward model for y in "dat.train" based on AIC with scope y ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10+V11+V12. Please display the summary but not the trace. Please calculate and display the validation deviance of the selected model.
+
+
+#### Backward
+
+```{r}
+
+# Fit the backward model using stepAIC
+backward.model <- stepAIC(m, direction = "backward", trace = FALSE)
+
+# Display the summary of the selected model
+summary(backward.model)
+
+# Predict on validation set
+backward.pred <- predict(backward.model, newdata = dat.valid, type = "response")
+
+# Calculate validation deviance
+backward.dev <- dev.get(dat.valid$y, backward.pred)
+
+# Store results
+name.vec <- c(name.vec, "backward")
+dev.vec <- c(dev.vec, backward.dev)
+
+# Print results
+cat("Validation Deviance for Backward model:", backward.dev, "\n")
+
+```
+
+
+## Question 2, part 3
+
+(10 points)
+
+Please perform *10-fold* cross-validated ridge regression on the model  y ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 + V11 + V12 fit on dat.train. Please display plot of the cross-validated models and the validation deviances for the model corresponding to "lambda.min" and "lambda.1se".
+
+```{r}
+set.seed(567890)
+X.train<-as.matrix(dplyr::select(dat.train,V1:V12))
+y.train<-as.matrix(dplyr::select(dat.train,y))
+
+# Perform 10-fold cross-validated ridge regression
+ridge.cv <- cv.glmnet(X.train, y.train, alpha = 0, family = "binomial")
+
+# Plot cross-validated models
+plot(ridge.cv)
+
+# Predict on validation set for lambda.min
+ridge.min.pred <- predict(ridge.cv, newx = as.matrix(dplyr::select(dat.valid, V1:V12)), 
+                          s = ridge.cv$lambda.min, type = "response")
+
+# Calculate validation deviance for lambda.min
+ridge.min.dev <- dev.get(dat.valid$y, ridge.min.pred)
+
+# Store results
+name.vec <- c(name.vec, "ridge.min")
+dev.vec <- c(dev.vec, ridge.min.dev)
+
+# Print results
+cat("Validation Deviance for ridge lambda.min:", ridge.min.dev, "\n")
+
+# Predict on validation set for lambda.1se
+ridge.1se.pred <- predict(ridge.cv, newx = as.matrix(dplyr::select(dat.valid, V1:V12)), 
+                          s = ridge.cv$lambda.1se, type = "response")
+
+# Calculate validation deviance for lambda.1se
+ridge.1se.dev <- dev.get(dat.valid$y, ridge.1se.pred)
+
+# Store results
+name.vec <- c(name.vec, "ridge.1se")
+dev.vec <- c(dev.vec, ridge.1se.dev)
+
+# Print results
+cat("Validation Deviance for ridge lambda.1se:", ridge.1se.dev, "\n")
+
+```
+
+## Question 2, part 4
+
+(10 points)
+
+Please perform *10-fold* cross-validated lasso regression on the model  y ~ V1 + V2 + V3 + V4 + V5 + V6 + V7 + V8 + V9 + V10 fit on dat.train. Please display the plot of the cross-validated models and the values of the deviances on dat.valid based on the model corresponding to "lambda.min" and "lambda.1se" on dat.train. Please also display the coefficients for the "lambda.min" and "lambda.1se" models. 
+
+```{r}
+set.seed(345678)
+
+# Perform 10-fold cross-validated lasso regression
+lasso.cv <- cv.glmnet(X.train, y.train, alpha = 1, family = "binomial")
+
+# Plot cross-validated models
+plot(lasso.cv)
+
+
+# Predict on validation set for lambda.min
+lasso.min.pred <- predict(lasso.cv, newx = as.matrix(dplyr::select(dat.valid, V1:V12)), 
+                          s = lasso.cv$lambda.min, type = "response")
+
+# Calculate validation deviance for lambda.min
+lasso.min.dev <- dev.get(dat.valid$y, lasso.min.pred)
+
+# Store results
+name.vec <- c(name.vec, "lasso.min")
+dev.vec <- c(dev.vec, lasso.min.dev)
+
+# Print results
+cat("Validation Deviance for Lasso lambda.min:", lasso.min.dev, "\n")
+
+# Predict on validation set for lambda.1se
+lasso.1se.pred <- predict(lasso.cv, newx = as.matrix(dplyr::select(dat.valid, V1:V12)), 
+                          s = lasso.cv$lambda.1se, type = "response")
+
+# Calculate validation deviance for lambda.1se
+lasso.1se.dev <- dev.get(dat.valid$y, lasso.1se.pred)
+
+# Store results
+name.vec <- c(name.vec, "lasso.1se")
+dev.vec <- c(dev.vec, lasso.1se.dev)
+
+# Print results
+cat("Validation Deviance for Lasso lambda.1se:", lasso.1se.dev, "\n")
+
+
+
+```
+
+#### Coefficients of the "lambda.min" and "lambda.1se" model
+
+```{r}
+# Display coefficients for lambda.min and lambda.1se
+coef(lasso.cv, s = "lambda.min")
+coef(lasso.cv, s = "lambda.1se")
+```
+
+## Question 2, part 5
+
+(5 points)
+
+Please display the collected validation deviances in ascending order labeled by model. Please indicate which model you would select based on validation deviance 
+
+The best model based on validation deviance is: Lasso lambda.min since it has the lowest deviance.
+
+```{r}
+# Collect validation deviances
+deviances <- data.frame(
+  Model = c("Full Model", "Backward Model", "Ridge lambda.min", "Ridge lambda.1se", "Lasso lambda.min", "Lasso lambda.1se"),
+  Deviance = c(full.dev, backward.dev, ridge.min.dev, ridge.1se.dev, lasso.min.dev, lasso.1se.dev)
+)
+
+# Sort deviances in ascending order
+deviances <- deviances[order(deviances$Deviance), ]
+
+# Display the collected validation deviances
+print(deviances)
+
+# Select the model with the lowest validation deviance
+best_model <- deviances$Model[1]
+cat("The best model based on validation deviance is:", best_model, "\n")
+
+
+```
+
+## Question 2, part 6
+
+(5 points)
+
+Please display the *mean* deviance on dat.train, dat.valid, and dat.test for the selected model.
+
+```{r}
+X.valid <- as.matrix(dplyr::select(dat.valid, V1:V12))
+y.valid <- as.matrix(dplyr::select(dat.valid, y))
+X.test <- as.matrix(dplyr::select(dat.test, V1:V12))
+y.test <- as.matrix(dplyr::select(dat.test, y))
+
+# Extract lambda.min
+lambda.min <- lasso.cv$lambda.min
+
+# Fit lasso regression model using lambda.min on the training set
+lasso_model_min <- glmnet(X.train, y.train, alpha = 1, lambda = lambda.min, family = "binomial")
+
+# Predict probabilities on the training set
+pred_train <- predict(lasso_model_min, newx = X.train, type = "response")
+
+# Predict probabilities on the validation set
+pred_valid <- predict(lasso_model_min, newx = X.valid, type = "response")
+
+# Predict probabilities on the test set
+pred_test <- predict(lasso_model_min, newx = X.test, type = "response")
+
+# Calculate mean deviance for each dataset
+mean_deviance_train <- dev.get(y.train, pred_train)/ length(y.train)
+mean_deviance_valid <- dev.get(y.valid, pred_valid)/ length(y.valid)
+mean_deviance_test <- dev.get(y.test, pred_test)/ length(y.test)
+
+# Display the mean deviances
+cat("Mean Deviance on Training Set:", mean_deviance_train, "\n")
+cat("Mean Deviance on Validation Set:", mean_deviance_valid, "\n")
+cat("Mean Deviance on Test Set:", mean_deviance_test, "\n")
+
+```
+
+
+
+# Question 3
+
+## Question 3, part 1
+
+(10 points)
+
+The code below fits a Poisson model, a quasi-Poisson model, and a negative binomial model of  the outcome variable `y1` on the explanatory variables `x1`, `x2`, and `x3` in `dat.ct`. Please determine which model is most appropriate for the data and explain why.
+
+The Negative Binomial model is more appropriate for the data due to its  effective handling of overdispersion, its lower AIC compared to the poisson model, and being the model with a significantly reduced residual deviance . The Poisson model and the  quasi-Poisson model both show overdispersion, with the quasi-poisson having a high dispersion parameter and the poisson model having a larger residual deviance , greater than the degrees of freedom.
+```{r}
+
+load("dat_ct.RData")
+
+m1<-glm(y1~x1+x2+x3,data=dat.ct,family="poisson")
+summary(m1)
+
+m1.quasi<-glm(y1~x1+x2+x3,data=dat.ct,family="quasipoisson")
+summary(m1.quasi)
+m1.nb<-glm.nb(y1~x1+x2+x3,data=dat.ct)
+summary(m1.nb)
+```
+
+## Question 3, part 2
+
+(10 points)
+
+Please fit a Poisson model, a quasi-Poisson model, and a negative binomial model of  the outcome variable `y2` on the explanatory variables `x1`, `x2`, and `x3` in `dat.ct`. Please determine which model is most appropriate for the data and explain why.
+
+The poissson model is more appropriate for the data due since it fits the data well without significant overdispersion.The Poisson model and the quasi-Poisson model both have similar residual deviances and the quasi-Poisson model also does not show significant overdispersion.
+
+```{r}
+# Fit models
+m2_poisson <- glm(y2 ~ x1 + x2 + x3, data = dat.ct, family = "poisson")
+summary(m2_poisson)
+
+m2_quasi <- glm(y2 ~ x1 + x2 + x3, data = dat.ct, family = "quasipoisson")
+summary(m2_quasi)
+
+m2_nb <- glm.nb(y2 ~ x1 + x2 + x3, data = dat.ct, control = glm.control( trace = 0))
+summary(m2_nb)
+
+
+```
+
+
+
+

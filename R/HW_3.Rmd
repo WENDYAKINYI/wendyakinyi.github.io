@@ -1,0 +1,196 @@
+---
+title: "Problem Set 3"
+subtitle: "applications of probability theory"
+author: "W. Akinyi"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(HistData)
+library(dplyr)
+library(tinytex)
+```
+
+# Introduction
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please generate your solutions in R markdown and upload both a knitted doc, docx, or pdf document in addition to the Rmd file.
+Please put your name in the "author" section in the header.
+
+The questions in this problem set use material from the slides on discrete and continuous probability spaces and the `Rmd` `Discrete_Probability_Distributions_2_3_3.Rmd`.
+
+# Load Data
+
+```{r}
+data("PolioTrials")
+dat<-PolioTrials
+n<-sum(dat$Population[1:2])
+obs<-abs(dat$Population[1]-dat$Population[2])
+```
+
+# Question 1
+
+Please carry out the analysis below and answer the questions that follow. For this assignment, please do all calculations in R and show the code and the results in the knit document.
+
+## Context
+
+In question 1 on problem set 2, we addressed the question of whether the sizes of the `Vaccinated` and `Placebo` groups in the `Randomized Control` experiment were consistent with the null model that the `Vaccinated` and `Placebo` groups were created by assigning each child independently to the `Vaccinated` or `Placebo` group with probability $0.5$.
+
+The approach, using the `rbinom` function, simulated this assignment then compared the absolute value of the observed difference in the sizes of the `Vaccinated` and `Placebo` groups to the absolute value of the simulated differences in the sizes of the `Vaccinated` and `Placebo` groups. 
+
+We can model the number $v$ of children assigned to the `Vaccinated` group under the null model by a binomial distribution with parameters $n=$ `r n` and $p=0.5$. Then the absolute value of the difference in the sizes of the `Vaccinated` and `Placebo` groups is $|v-(n-v)|=|2v-n|$. Thus the absolute difference is greater than or equal to the observed difference $d=$ `r obs` if and only if $2v-n\geq d$ or $2v-n\leq-d$. Equivalently, $v\geq\frac{n+d}{2}$ or $v\leq\frac{n-d}{2}$. Thus the probability of the event that the absolute difference is greater than or equal to the observed difference is the probability of the event that $v\geq\frac{n+d}{2}$ or $v\leq\frac{n-d}{2}$. This is the sum of the probabilities of the event that $v\geq\frac{n+d}{2}$ and the event that $v\leq\frac{n-d}{2}$ since these events are disjoint. We can calculate these probabilities using the `pbinom` function.
+
+## Q1, part 1
+(10 points)
+
+The code below carries out the calculation just described.
+
+```{r}
+# Can you see why we use (n+obs)/2-1 for the "q" argument in the first pbinom function?Yes, it involves understanding the properties of binomial distribution and the specifics of how the pbinom function calculates cumulative probabilities in R
+p1<-pbinom((n+obs)/2-1,n,0.5,lower.tail=FALSE)
+p2<-pbinom((n-obs)/2,n,0.5)
+p1+p2
+```
+
+Are the sizes of the observed `Vaccinated` and `Placebo` groups consistent with hypothesis that the assignments to the groups was made by assigning each participant independently to the `Vaccinated` group with probability $0.5$ and to the `Placebo` group with probability $0.5$ ? 
+
+(Yes: the code calculates the sum of the probabilities of the events that $v\geq\frac{n+d}{2}$ and $v\leq\frac{n-d}{2}$ which are disjoint events. The result 0.4461719 indicates that about 44.6% of the simulated differences are greater than or equal to the observed differences. This large portion suggests that the observed differences in group sizes is not unusual under the hypothesis of random assignment. Therefore, the observed differences in group sizes is within range given the large number of simulations showing an equal or greater difference.)
+
+Note that this is a 2-tailed test. We're calculating the probability of a result under the null model as extreme as or more extreme than the observed result, in either direction. Set the observed count in the `Vaccinated` group to $w$. The value $\frac{d}{2}$ above is equal to $\left|\frac{n}{2}-w\right|$, the distance of the observed count from $\frac{n}{2}$, which we will see is the expected count under the null model. The event $v\geq\frac{n+d}{2}$ or $v\leq\frac{n-d}{2}$ is the event that the outcome is as far from $\frac{n}{2}$ as $w$ is or further from $\frac{n}{2}$ than $w$ is.
+
+ 
+## Q1, part 2
+
+(10 points)
+
+Is the absolute difference between the count of paralytic polio cases in the `Vaccinated` group and the `Placebo` group in the `RandomizedControl` trial consistent with the null model that the cases were assigned independently to the `Vaccinated` group with probability $0.5$ and to the `Placebo` group with probability $0.5$? More precisely, the null model is that the count of cases in the `Vaccinated` group is distributed according to a $Binomial(n,p)$ distribution where $n$ is the sum of the counts of paralytic polio in the `Vaccinated` and `Placebo` groups and $p=0.5$. Please adapt the method above, rather than using simulations.
+
+```{r}
+n<-sum(dat$Paralytic[c(1:2)])
+obs<-abs(dat$Paralytic[1]-dat$Paralytic[2])
+
+# your code here. Please be sure that your computed probability shows in your knitted solutions.
+# Calculate the probability for the two-tailed test
+p1 <- pbinom((n + obs)/2 - 1, n, 0.5, lower.tail = FALSE)
+p2 <- pbinom((n - obs)/2, n, 0.5)
+
+# Sum of the probabilities for both tails
+p_total <- p1 + p2
+
+# Output the total probability
+p_total
+
+```
+
+(No: The probability of observing such an extreme difference under the null hypothesis is exceedingly small (7.83861e-12) indicating that the observed difference is highly unlikely to have occurred by chance if the null model were true. This suggests that there is a significant difference in the distribution of paralytic polio cases between the two groups that cannot be attributed to random assignment alone.
+
+Note that this is again a two-tailed test.
+
+## Q1, part 3
+
+(10 points)
+
+Previously, to examine the efficacy of the vaccination, we used the binomial null model above, but our test statistic was the count of paralytic polio cases in the `Vaccinated` group. Please compute the probability under the null model of a count paralytic polio cases in the `Vaccinated` group less than or equal to the observed count. Please do not use simulations.
+
+Note that this is a 1-tailed test. We're calculating the probability of an outcome less that or equal to the count in the `Vaccinated` group.
+
+```{r} 
+n <- sum(dat$Paralytic[1:2])
+obs_vaccinated <- dat$Paralytic[1]
+
+# Calculate the probability under the null model
+p <- pbinom(obs_vaccinated, n, 0.5)
+
+# Output the probability
+p
+
+```
+
+Note that this should be smaller than the value in Q1, part 2.
+
+# Question 2
+
+Consider the following probability space, $(S,M,P)$ where $S=\{0,1\}\times\{a,b\}$, $M$ is the power set of $S$, and $P$ is defined by the density function $f((0,a))=0.06$, $f((0,b))=0.24$, $f((1,a))=0.14$, and $f((1,b))=0.56$. 
+
+For example, this could model the experiment of sampling an individual from a population and recording medical data where $x=0$ indicates absence of a condition and $x=1$ indicates the presence of a condition while $y=a$ and $y=b$ are labels indicating two genotypes.
+
+## Q2, part 1
+
+(5 points)
+
+Are the events $C=\{(x,y)\in S|x=1\}$ and $D=\{(x,y)\in S|y=a\}$ independent? (Yes: the events $C$ and $D$ are independent because the probability of their intersection equals the product of their individual properties, satisfying the definition of independence.
+Calculation: $P(C)$ includes all outcomes where $(x=1)$,regardless of $(y)$.
+             so;$[P(C) = f((1, a)) + f((1, b)) = 0.14 + 0.56 = 0.70]$
+             $P(D)$ includes all outcomes where $(y=a)$,regardless of $(x)$.
+             so;$[P(D) = f((0, a)) + f((1, a)) = 0.06 + 0.14 = 0.20]$
+             $P(C \cap D)$ includes all outcomes where $(x=1)$,and $(y=a)$.
+             so;$[P(C \cap D) = f((1, a)) = 0.14]$
+Independence check:$P(C \cap D)=P(C)P(D)$
+            and;   $0.14=(0.70)(0.20)$ ; Events $C$ and $D$ are independent.)
+
+## Q2, part 2
+
+(5 points)
+
+If we associate the vector c(x,y) with the outcome $(x,y)\in S$ does the following function sample from the probability space $(S,M,P)$? You may assume the `sample` function performs perfectly in sampling according to the specified `prob` values. ( No: The sampling strategy for the function sample_s does not match the original probabilities of the outcomes in the probability space. For example, the probability for sampling $(1,'b')$ using the function sample_s is the product of the independent probabilities of sampling $(1)$ and $'b'$ which is $(0.7\times0.8=0.56)$. Although this matches the specified probability for $(1,b)$, the method does not hold for other combinations due to the way probabilities are assigned to $(x)$ and $(y)$ independently in the function.To correctly sample from the probability space according to the specified probabilities, the function would need to directly use the probabilities of the combined outcomes rather than attempting to sample $(x)$ and $(y)$ independently with separate probabilities. The original probabilities indicate a dependency between $(x)$ and $(y)$ that is not captured by the independent sampling method used in sample_S.)
+
+
+```{r}
+sample_S<-function(){
+  x<-sample(c(0,1),1,prob=c(0.3,0.7))
+  y<-sample(c("a","b"),1,prob=c(0.2,0.8))
+  return(c(x,y))
+}
+set.seed(4567)
+sample_S()
+
+```
+
+## Q2, part 3
+
+(10 points)
+
+The following code simulates sampling 50 outcomes from the probability space $(S,M,P)$ and calculates the proportions of each outcome in the sample. The result is in the data frame `outcome.probs`. Please treat `outcome.probs` as a table defining a new density function $f_e$ on $S$, giving rise to a new probability function $P_e$. The resulting probability space $(S,M,P_e)$ is called the *empirical* probability space associated with the sample.
+
+
+```{r}
+set.seed(87678)
+sz<-50
+outcomes<-t(replicate(sz,sample_S()))
+outcomes<-as.data.frame(outcomes)
+names(outcomes)<-c("x","y")
+outcome.probs<-outcomes %>%
+  group_by(x,y) %>%
+  summarise(count=n()/sz,.groups="drop")
+outcome.probs
+
+```
+
+Are the events $C=\{(x,y)\in S|x=1\}$ and $D=\{(x,y)\in S|y=a\}$ independent in $(S,M,P_e)$? (No: The events (C) and (D) are not independent in the empirical probability space $((S, M, P_e))$ based on the strict definition of independence, as $(P_e(C \cap D) \neq P_e(C)P_e(D))$)
+
+```{r}
+# your calculations here
+# Given empirical probabilities
+P_e <- c(0.06, 0.18, 0.2, 0.56)
+
+# Calculating P_e(C), P_e(D), and P_e(C ∩ D)
+P_e_C <- P_e[3] + P_e[4]  # P_e(C)
+P_e_D <- P_e[1] + P_e[3]  # P_e(D)
+P_e_C_intersection_D <- P_e[3]  # P_e(C ∩ D)
+
+# Checking for independence
+if (P_e_C_intersection_D == P_e_C * P_e_D) {
+  print("Events C and D are independent in the empirical probability space (S, M, P_e)")
+} else {
+  print("Events C and D are not independent in the empirical probability space (S, M, P_e)")
+}
+
+```
+

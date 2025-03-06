@@ -1,0 +1,15 @@
+use comp3421;
+-- Dropping MUSIC_ALBUM table first since it has foreign key dependencies
+DROP TABLE IF EXISTS MUSIC_ALBUM;
+
+-- Dropping MUSIC_ARTIST table
+DROP TABLE IF EXISTS MUSIC_ARTIST;
+
+-- Dropping MUSIC_LABEL table
+DROP TABLE IF EXISTS MUSIC_LABEL;
+
+-- Dropping MUSIC_FORMAT table
+DROP TABLE IF EXISTS MUSIC_FORMAT;
+
+-- Dropping MUSIC_FORMAT table
+DROP TABLE IF EXISTS MUSIC_GENRE;

@@ -1,0 +1,195 @@
+---
+title: "Problem Set 1"
+subtitle: "hello world"
+author: "W. Akinyi"
+
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+library(HistData)
+
+```
+
+# Introduction
+
+These questions were rendered in R markdown through RStudio (<https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf>, <http://rmarkdown.rstudio.com> ).
+
+Please generate your solutions in R markdown. From an Rmd file in RStudio, you can generate a word document by selecting the "Knit to Word" option next to the "Knit" icon in the toolbar above the edit window. Please upload both a knitted doc, docx, or pdf document in and the Rmd file.
+
+Please put your name in the "author" section in the header.
+
+RStudio may ask you to install packages when you run this code. Accepting the request will allow you to proceed.
+
+In this problem set, the code is provided. The challenge is to interpret the results according to the principles introduced in the polio case study in week 1.
+
+# Load Data
+
+```{r}
+data("PolioTrials")
+dat<-PolioTrials
+kable(dat[,1:4])
+
+```
+
+
+
+# Context
+
+The basic question "did the vaccine work?" was addressed in week 1 using the data from the randomized control trial of the Salk vaccine. The count of paralytic polio cases in the vaccinated group was compared to the counts that were produced under the null hypothesis that the vaccine had no effect on the incidences of paralytic polio. 
+
+In discussions, we raised the possibility of using proportion rather than count. To explore this, we will repeat the analysis using ratio of the proportion of paralytic polio in the vaccinated population to the proportion of paralytic polio in the placebo population as the test statistic. 
+
+A question was raised about how the results might differ if the disease was rarer in the study population. To explore this, we will reduce the counts of paralytic polio in each group by a fixed factor and repeat the analysis from class for these reduced counts.
+
+
+
+# Question 1
+
+In this question, we try a different test statistic, the ratio of the proportion of paralytic polio cases in the `Vaccinated` group to the proportion of paralytic polio cases in the `Controls` group of the `RandomizedControl` study. 
+
+## Q1, part 1
+(10 points)
+
+The code that follows calculates the value of the ratio of those proportions for the data. Please give the value of that statistic below
+
+```{r}
+dat$paralytic.rate<-dat$Paralytic/dat$Population
+dat$paralytic.rate[1:2]
+dat$paralytic.rate[1]/dat$paralytic.rate[2]
+```
+The value of the ratio of the proportion of paralytic polio cases in the `Vaccinated` group to the proportion of paralytic polio cases in the `Placebo` group of the `RandomizedControl` study: (0.2876484) 
+
+## Q1, part 2
+(20 points)
+
+Create a synthetic population of the size of the population in the experiment. Model respondents who didn't contract paralytic polio with a "0". Model those who did with "1".
+
+```{r}
+pop<-rep(0, sum(dat$Population[1:2]))
+cases<-sum(dat$Paralytic[1:2])
+pop[1:cases]<-1
+```
+
+Sample a simulated vaccinated group by sampling a subset of entries in this this vector in such a way that all subsets of the size of the `Vaccination` group are equally likely. The remaining entries are the simulated `Placebo` group. Calculate the ratio of proportions for the simulation.  
+
+```{r}
+tot.vac<-dat$Population[1]
+set.seed(87678)
+sim<-sample(pop,tot.vac)
+cases.vacc<-sum(sim)
+cases.placebo<-cases-cases.vacc
+(cases.vacc/dat$Population[1])/(cases.placebo/dat$Population[2])
+
+```
+One sample isn't conclusive. Let's loop through the sampling process many times.
+
+```{r}
+
+obs.ratio<-dat$paralytic.rate[1]/dat$paralytic.rate[2]
+n<-200 # number of simulations. We used 1000 in class, but this is quicker and reasonably stable.
+
+
+# Generate n ratios of the proportion of paralytic polio in the vaccinated population to the proportion of paralytic polio in the placebo population in simulations. 
+
+set.seed(45678765)
+ratios<-numeric(n)
+
+for( i in 1:n){
+  sim<-sum(sample(pop,tot.vac))
+  cases.vacc<-sum(sim)
+cases.placebo<-cases-cases.vacc
+ratios[i]<-(cases.vacc/dat$Population[1])/(cases.placebo/dat$Population[2])
+}
+```
+
+Examine the results.
+
+```{r}
+# Plot a histogram of the ratios in the simulations.
+dat.plot<-data.frame(ratios)
+ggplot(dat.plot,aes(x=ratios))+geom_histogram(bins=30)
+
+
+# Calculate the proportion of the simulated ratios of paralytic polio in the "Vaccinated" group that are less than or equal to the observed ratio:
+mean(ratios<=obs.ratio)
+```
+Does a ratio as small as or smaller than the observed ratio appear appear reasonably likely to occur under the permutation model here? (The output 0 means that none of the simulated ratios were as small as or smaller than the observed ratio. Therefore the observed ratio does not appear reasonably likely to occur under the permutation model. This would mean that the observed effect is statistically significant and that the vaccine has a real effect in reducing the rates of paralytic polio.)
+
+# Question 2
+
+To investigate how the results might differ if the disease was rarer in the study population, we reduce the counts of paralytic polio in each group by a fixed factor of 0.03, round to the nearest integer, and repeat the analysis from class for these reduced counts.
+
+```{r}
+# Set the reduction factor 
+# (You can experiment with other values to see how different reduction factors affect the results.)
+reduction.factor<-.03
+
+# Create a column in the data set with counts of paralytic polio reduced by this factor, then rounded to the nearest integer.
+dat$Paralytic.reduced<-round(dat$Paralytic*reduction.factor)
+```
+
+View the reduced counts
+
+```{r}
+dat$Paralytic.reduced[1:2]
+```
+Replicate the analysis in 01_polio_simulation_shuffle_model.rmd for these reduced numbers of paralytic polio cases.
+
+Set up a vector representing the study population.
+
+```{r}
+# Create a a vector with 1's for cases and 0's for non-cases
+
+# vector of all 0's with length equal to the size of the study population:
+pop.reduced<-rep(0, sum(dat$Population[1:2]))
+
+# the reduced number of paralytic polio cases
+cases.reduced<-sum(dat$Paralytic.reduced[1:2]) 
+
+# set 1's for paralytic polio cases, 0's for non-cases 
+pop.reduced[1:cases.reduced]<-1
+```
+
+Carry out the sampling to produce a simulated vaccinated group multiple times and record the number of paralytic polio cases in the simulated vaccination group.
+
+```{r}
+n<-200 # the number of replications
+sim<-numeric(n) # vector to store the results
+set.seed(345689876) # set the seed for the pseudo-random number generator
+
+# Draw n samples of simulated vaccinated population case counts under the assumption that the vaccination has no effect on the risk of paralytic polio.  
+for( i in 1:n){
+  # Record the number of paralytic polio cases in the simulated vaccinated population
+  sim[i]<-sum(sample(pop.reduced,tot.vac))
+}
+```
+
+Plot the simulated counts.
+
+```{r}
+dat.plot<-data.frame(sim)
+ggplot(dat.plot,aes(x=sim))+geom_histogram(binwidth = 1)
+```
+
+Calculate the proportion of the simulated counts that are as low as or lower than the observed count.
+
+```{r}
+mean(sim<=dat$Paralytic.reduced[1])
+```
+# Q2
+(20 points)
+
+Does a count as small as or smaller than the reduced count appear reasonably likely to occur under the permutation model here? (The value 0.31 suggests that the observed reduced count of paralytic polio cases in the vaccinated is reasonably likely to occur. Therefore a count as small as or smaller than the reduced count does appear reasonably likely to occur under the permutation model, which would mean that the observed effect is not statistically significant, and that the vaccine does not have a strong detectable effect in reducing the rates of paralytic polio when considering the reduced counts.)
+
+
+
+
+
+
+

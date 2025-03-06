@@ -1,0 +1,373 @@
+---
+title: "Problem Set 3"
+author: "W.Akinyi"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=TRUE}
+
+# Load any packages, if any, that you use as part of your answers here
+# For example: 
+
+library(MASS)
+library(tidyverse)
+library(ggpubr)
+options(dplyr.summarise.inform = FALSE)
+
+
+```
+
+# Question 1
+
+## Question 1 context
+
+This question is based on a sample of infants born full-term in single births (not one of twins or higher multiples) drawn from a record of births in USA, 2020, downloaded https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm , 1/4/2022
+
+These data represent a simple random sample of data for such infants for whom the following values were recorded:
+
+`DBWT`: birth weight in grams
+
+`WTGAIN`: maternal weight gain in pounds
+
+`BMI`: maternal pre-pregnancy body mass index
+
+`M_Ht_In`: maternal height in inches
+
+`OEGest_Comb`: Obstetric estimate of Combined Gestation, in weeks
+
+(generated in data_exploration.Rmd in probstat_1-2U/birth_data)
+
+The code below fits a linear regression model of `DBWT` on the remaining variables and displays assessments of Normality of the model residuals.
+
+```{r}
+load("../../R2/Week 3/dat_birthweights.RData")
+wgt<-lm(DBWT~WTGAIN+BMI+M_Ht_In+OEGest_Comb,dat.bwt)
+summary(wgt)
+ggqqplot(wgt$residuals)
+shapiro.test(wgt$residuals)
+```
+
+## Question 1, part 1
+
+(5 points)
+
+According to the model above, please describe the change in `DBWT` for an increase of 5 in `WTGAIN`. Please use a sentence of the form "An increase of 5 pounds in maternal weight gain is associated with...". The sentence should use a clear description of `DBWT` including units.
+
+
+```{r}
+# Calculate the change in DBWT for an increase of 5 in WTGAIN using the coefficient from the linear model
+change_in_DBWT_for_5_WTGAIN <- coef(wgt)["WTGAIN"] * 5
+
+# Print the result
+cat("An increase of 5 pounds in maternal weight gain is associated with an increase of", change_in_DBWT_for_5_WTGAIN, "grams in birth weight.\n")
+
+```
+
+
+## Question 1, part 2
+
+(5 points)
+
+Do the residuals appear to be consistent with a sample from an approximately Normally distributed population?
+Yes, the residuals appear to be consistent with a sample from an approximately normally distributed population since the QQ plot visually shows that the points lie roughly along the line y = x with no systematic patterns or severe deviations. This is further supported by  Shapiro-Wilk normality test having a p-value of 0.5694 therefore, we cannot reject the null hypothesis of normality.
+
+## Question 1, part 3
+
+(5 points)
+
+The function "scale" applied to a numeric matrix, or a data.frame with only numeric variables, for each column, subtracts the mean and divides by the standard deviation. This results in columns with sample mean equal to 0 and sample standard deviation equal to 1.
+
+Please fit a linear model of `DBWT` as a function `WTGAIN`,`BMI`, `M_Ht_In`, and `OEGest_Combof`  using the data in the scaled data frame `dat.bwt.standard`
+
+```{r}
+dat.bwt.standard<-as.data.frame(scale(dat.bwt))
+# Fit a linear regression model predicting birth weight (DBWT) from the scaled variables
+wgt_standard <- lm(DBWT ~ WTGAIN + BMI + M_Ht_In + OEGest_Comb, data = dat.bwt.standard)
+
+# Display the summary of the linear regression model
+summary(wgt_standard)
+
+```
+
+## Question 1, part 4
+
+(5 points)
+
+For the model in question 1, part 3, please describe the change in `DBWT` for an increase of 1 in `WTGAIN`. Please use a sentence of the form "An increase of 1 *your units here* in maternal weight gain is associated with...". The sentence should use a clear description of `DBWT` including the units used in `dat.bwt.standard`.
+
+```{r}
+# Calculate the change in DBWT for an increase of 1 in WTGAIN using the coefficient from the scaled linear model
+change_in_DBWT_for_1_WTGAIN <- coef(wgt_standard)["WTGAIN"]
+
+# Print the result 
+cat("An increase of 1 standard deviation in maternal weight gain is associated with a change of", change_in_DBWT_for_1_WTGAIN, "standard deviations in birth weight.\n")
+
+```
+
+
+
+## Question 1, part 5
+
+(5 points)
+
+Below, the code for a linear regression model of `DBWT`, unstandardized, on the remaining standardized variables in `dat.bwt` is fit. The "predict" function for linear regression models can be used to 
+
+* return the predicted values of the outcome variable for new data, 
+
+* to return the predicted values of the outcome variable together with a confidence interval for the prediction for new data, and
+
+* to return the predicted values of the outcome variable together with a confidence interval for the new outcomes for new data. 
+
+The code below also runs the `predict` function in several forms for linear model on these data with `WTGAIN`, `BMI`, `M_Ht_In`, and `OEGest_Comb` all set to -1, 0, and 1.
+
+
+```{r}
+dat.bwt.mixed<-dat.bwt.standard
+dat.bwt.mixed$DBWT<-dat.bwt$DBWT
+wgt.mixed<-lm(DBWT~WTGAIN+BMI+M_Ht_In+OEGest_Comb,dat.bwt.mixed)
+
+dat.new<-data.frame(WTGAIN=-1:1,BMI=-1:1,M_Ht_In=-1:1,OEGest_Comb=-1:1)
+
+# explanations left to the student to figure out:
+
+(p1<-predict(wgt.mixed,newdata=dat.new))
+(p2<-predict(wgt.mixed,newdata=dat.new,interval="prediction",level=0.95))
+(p3<-predict(wgt.mixed,newdata=dat.new,interval="confidence",level=0.95))
+
+```
+Based on this output, please answer the following questions:
+
+A) What is a 95% confidence interval for the predicted value of `DBWT` for a new infant with maternal `WTGAIN`, `BMI`, `M_Ht_In`, and `OEGest_Comb` all equal to 1 standard deviation of the corresponding variable? This could be used in an obstetric practice to see if their mean birth weight of infants with these maternal characteristics is within a range that is considered normal.
+
+```{r}
+#The95% confidence interval for the predicted value of DBWT (birth weight in grams) for a new infant with maternal WTGAIN, BMI, M_Ht_In, and OEGest_Comb all equal to 1 standard deviation of the corresponding variable is [3717.575, 3992.040]grams.
+```
+B) What is the predicted value of `DBWT` for a new infant with maternal `WTGAIN`, `BMI`, `M_Ht_In`, and `OEGest_Comb` all equal to 1 standard deviation of the corresponding variable?
+
+
+```{r}
+#The predicted value of DBWT for a new infant with maternal WTGAIN, BMI, M_Ht_In, and OEGest_Comb all equal to 1 standard deviation of the corresponding variable is 3854.808 grams.
+
+```
+
+C) Please give an estimate of a 95% confidence interval for the weight of an infant with maternal `WTGAIN`, `BMI`, `M_Ht_In`, and `OEGest_Comb` all equal to 1 standard deviation of the corresponding variable? This could be used in an obstetric practice to see if the birth weight of an infant with these maternal characteristics is within a range that is considered normal.
+
+```{r}
+# The 95% confidence interval for the birth weight of an infant with maternal WTGAIN, BMI, M_Ht_In, and OEGest_Comb all equal to 1 standard deviation of the corresponding variable is [3039.670, 4669.946] grams.
+```
+
+
+
+
+# Question 2
+
+A regression model for `ldl` on the remaining variables in `SAheart.data` is fit below. The data are from "Elements of Statistical Learning, ed.2" and are described in https://web.stanford.edu/~hastie/ElemStatLearn/datasets/SAheart.info.txt
+
+```{r}
+dat<-read.csv("../../R2/Week 3/SAheart.data")
+dat$row.names<-NULL
+m.base<-lm(ldl~.,data=dat)
+
+```
+
+## Question 2, part 1
+
+(5 points)
+
+Please produce a visualization and a statistical assessment to address whether the residuals appear to be consistent with a sample from an approximately Normally distributed population. Do the residuals appear to be consistent with a sample from an approximately Normally distributed population?
+
+No, the residuals do not appear to be consistent with a sample from an approximately normally distributed population since the QQ plot visually shows severe deviations from the reference line at the tails. This is further supported by  Shapiro-Wilk normality test having a low p-value of 9.416e-15 therefore, we reject the null hypothesis of normality.
+```{r}
+m.base<-lm(ldl~.,data=dat)
+summary(m.base)
+# Visual assessment: GGQQ plot
+ggqqplot(m.base$residuals)
+# Statistical assessment: Shapiro-Wilk normality test
+shapiro_test_result <- shapiro.test(residuals(m.base))
+print(shapiro_test_result)
+
+```
+
+
+
+## Question 2, part 2
+
+(5 points)
+
+There are several reasons to transform a variables, that is, to apply a function to the variable then work with the resulting values. We will explore one reason in this question. 
+
+The Box-Cox transformations are a parametrized family of power transformations designed to be applied to the outcome variable to improve the Normality of residuals of a linear model. For $\lambda\neq0$, the transformation maps $y$ to $\frac{y^\lambda-1}{\lambda}$ while for $\lambda=0$, the transformation maps $y$ to $\ln (y)$. (Note that $\ln (y)=\lim_{\lambda \rightarrow0}\frac{y^\lambda-1}{\lambda}$. )
+
+For each value of $\lambda$ in the range of the argument `lambda`, the `boxcox` function in the "MASS" package fits the linear model it is given as an argument but with the Box-Cox transformation applied to the outcome variable, assumed to be positive. The function "boxcox" computes the log likelihood of the residuals under the assumption of Normality. This is plotted against the $\lambda$'s and the $\lambda$'s and the corresponding log likelihoods are returned. In typical use, a value of $\lambda$ close to maximizing the log likelihood is chosen and regression performed with this transformation applied to the outcome variable.
+
+In this problem, you will walk through the steps of conducting a Box-Cox transformation. 
+
+First, identify a range of $\lambda$ close to maximizing the log likelihood:
+
+```{r}
+lambda<-boxcox(m.base)
+# at what index is the maximum log likelihood?
+ll.best<-which(lambda[[2]]==max(lambda[[2]]))
+# what is the corresponding lambda?
+lambda.best<-lambda[[1]][ll.best]
+lambda.best
+```
+
+Next it is customary to pick simple $\lambda$ in range rather than exact maximizing value. This is to aid interpretation. Here, the maximixing $\lambda$ is a very small power, and the suggested range includes 0, corresponding to a natural log function. 
+
+Please apply the natural log transformation to `ldl`, fit the corresponding linear regression of $\ln (ldl)$ on the remaining variables, display the model summary, assess to Normality of the residuals visually and with a test of Normality, and state your conclusion of whether the residuals for this linear regression appear to be consistent with a sample from an approximately Normally distributed population.   
+
+No, the residuals do not appear to be consistent with a sample from an approximately normally distributed population since the QQ plot visually shows severe deviations from the reference line at the tails. This is further supported by  Shapiro-Wilk normality test having an extremely small p-value of < 2.2e-16 therefore, we reject the null hypothesis of normality.
+
+
+```{r}
+
+# Apply natural log transformation to ldl
+dat$ln_ldl <- log(dat$ldl)
+
+# Fit the linear regression model with the transformed outcome variable
+m_transformed <- lm(ln_ldl ~ ., data = dat)
+
+# Display the summary of the model
+summary(m_transformed)
+
+# Visual assessment of normality of residuals: QQ plot
+ggqqplot(m_transformed$residuals)
+
+# Statistical assessment of normality: Shapiro-Wilk test
+shapiro_test_result <- shapiro.test(residuals(m_transformed))
+print(shapiro_test_result)
+```
+
+## Question 2, part 3
+
+(5 points)
+
+Suppose an increase of one unit in the `adiposity` variable is associated with an increase of 0.02 units in `log(ldl)`. If `log(ldl)` is increased by 0.02 units,  what is the new value of `ldl`? Please give a formula for the new value in terms of `ldl` and 0.02.   
+Change in ln(ldl) = 0.02 (for a 1 unit increase in adiposity)
+log(ldl_new) = log(ldl) + 0.02
+ldl_new = exp(log(ldl_new))
+ldl_new = exp(log(ldl) + 0.02)
+ldl_new = exp(log(ldl)) * exp(0.02)
+ldl_new = ldl * exp(0.02)
+
+
+# Question 3
+
+The data below were used in problem set 2. Addtional information can be found there.
+The raw data on which the data in this question are based is the “Pew Research Center’s American Trends Panel” 
+American Trends Panel Wave 116
+Field dates: Oct. 10 – Oct. 16, 2022
+Topics: Politics timely and topical downloaded 4/12/2024 from https://www.pewresearch.org/religion/dataset/american-trends-panel-wave-116/
+
+The codebook was downloaded 4/12/2024 from https://www.pewresearch.org/wp-content/uploads/2018/05/Codebook-and-instructions-for-working-with-ATP-data.pdf 
+
+The variable `total` is the sum of the survey values of the election questions VTADMIN_COM_W116,VTADMIN_US_W116,VTCOUNT_INP_W116, and VTCOUNT_ABS_W116, for which a scale of 1-4 is applied indicating the extent to which the respondent feels that there is problem with elections of the type described in the question. The variable `F_PARTY_FINAL` is the party affiliation of the respondent. 
+
+```{r}
+load("../../R2/Week 2/dat_sub.RData")
+total<-dplyr::select(dat.sub,starts_with("VT"))%>%rowSums()
+dat.sub<-cbind(dat.sub,total)
+dat.sub$F_PARTY_FINAL<-relevel(dat.sub$F_PARTY_FINAL,ref="Democrat")
+ggqqplot(dat.sub,x="total",facet.by = c("F_PARTY_FINAL"))
+(m.aov<-summary(aov(total~F_PARTY_FINAL,data=dat.sub)))
+m<-lm(total~F_PARTY_FINAL,data=dat.sub)
+(m.lm<-summary(m))
+ggqqplot(stdres(m))
+(dat.agg<-dat.sub%>%group_by(F_PARTY_FINAL)%>%summarize(mean=mean(total)))
+m.lm$coefficients[,1]+c(0,rep(m.lm$coefficients[1,1],3))
+```
+
+A) Please identify the description of the value in the summary of the linear model, `m.lm` that corresponds the value describes as `Pr(>F)` in `m.aov`.
+The value described as Pr(>F) in m.aov corresponds to the p-value of the F-test in the ANOVA.
+
+B) Please identify the description of the value in the summary of the linear model, `m.lm` that corresponds the value describes as the degrees of freedom of the residuals in `m.aov`.
+
+The description of the value in the summary of the linear model m.lm that corresponds to the degrees of freedom of the residuals in m.aov is "Residual standard error" degrees of freedom.
+
+C) Please describe and illustrate how to calculate the mean of `total` for each level of `F_PARTY_FINAL` using the coefficients of the linear model `m.lm`.
+
+The mean total for each party affiliation:
+
+Democrat: Mean(total) = Intercept = 5.0893
+Republican: Mean(total) = Intercept + Republican Coefficient = 5.0893 + 0.8393 = 5.9286
+Independent: Mean(total) = Intercept + Independent Coefficient = 5.0893 + 0.9107 = 6.0000
+Something Else: Mean(total) = Intercept + Something Else Coefficient = 5.0893 + 1.7528 = 6.8421
+
+
+## Question 3, part 2
+
+(5 points)
+
+Note that the normality of the values of `total` for each level of `F_PARTY_FINAL` is not obvious, nor is the normality of the residuals of the linear model of `total` on `F_PARTY_FINAL`. This means that the p-values of these methods are not reliable. Under these circumstances, one option to check p-values is to resample the data many times and to look at the variation in the fitted models. This is called *bootstrapping*. Below, we carry out a basic *bootstrap* test of the significance of the coefficients (not corrected for multiple testing) of the linear model of `total` on `F_PARTY_FINAL`. 
+
+The strategy is to treat the observed distributions of `total` for each level of `F_PARTY_FINAL` as the population distributions and to draw samples from these distributions of the same size as the original data set. The benefit of this depends on the extent to which the observed data are fully represent the population. Our samples in each party affiliation are fairly large, so may be used as reasonable estimates of the populations.
+
+We then fit the linear model of `total` on `F_PARTY_FINAL` to each of these samples and record the values of the coefficients. This gives an idea of how these coefficients would differ if a different sample was drawn. By looking at the 0.025 and 0.975 quantiles of the coefficients, we can check whether the bootstrapped coefficients are consistent with significance at the 0.05 level. If the 0.025 quantile is negative and the 0.975 quantile is positive, then the 95% bootstrap interval for the coefficient includes 0 and gives evidence that the coefficient is not statistically significant at the 0.05 level.
+
+There is a library, `boot` to do this, but we will do this manually to illustrate the process. 
+
+```{r, cache=TRUE}
+# function to resample the value of "total" for a given level, level.this, of a factor of dat.this
+boot.sample<-function(dat.this,level.this){
+  temp<-filter(dat.this,F_PARTY_FINAL==level.this)
+  return(sample(temp$total,length(temp$total),replace=TRUE))
+}
+
+# function to construct a bootstrapped data set of "total" based on the levels of F_PARTY_FINAL from dat.this
+boot.data<-function(dat.this){
+  # sample the value of "total" for each level of F_PARTY_FINAL
+  dat.list<-lapply(levels(dat.this$F_PARTY_FINAL),boot.sample,dat.this=dat.this)
+  # construct a vector of party affiliations corresponding to the bootstrapped data
+  party<-rep(levels(dat.this$F_PARTY_FINAL),sapply(dat.list,length))
+  # construct a data frame of the bootstrapped data
+  dat.boot<-data.frame(F_PARTY_FINAL=party,total=unlist(dat.list))
+  return(dat.boot)
+}
+set.seed(234567)
+# create 1000 bootstrapped data sets
+boot.data.sets<-replicate(1000,boot.data(dat.sub),simplify=FALSE) # a little slow
+
+# extract the coefficients of the linear model of total on F_PARTY_FINAL for each bootstrapped data set
+boot.lm<-sapply(boot.data.sets,function(dat.this){(lm(total~F_PARTY_FINAL,data=dat.this)$coefficients)})
+# check the 0.025 and 0.975 quantiles of the coefficients
+apply(boot.lm,1,quantile,probs=c(0.025,0.975))
+# check the 0.005 and 0.995 quantiles of the coefficients
+apply(boot.lm,1,quantile,probs=c(0.005,0.995))
+```
+
+Please interpret the results of the bootstrapped test of the significance of the coefficients of the linear model of `total` on `F_PARTY_FINAL`. In particular, do these tests support or contradict the p-values of the coefficients of the linear model?
+
+
+The 99% and 95% bootstrap intervals  for both the F_PARTY_FINALIndependent and F_PARTY_FINALSomething else are entirely positive ndicating consistent evidence for significant coefficients despite the linear model showing low p-values of 0.0122 for Independent and a very low p-value of 2.86e-05 for F_PARTY_FINALSomething else.
+
+The 95% bootstrap interval for the F_PARTY_FINALRepublican is also entirely positive indicating potential significance,despite the linear model showing low p-values of 0.0358. However, the 99% bootstrap interval ranges from negative to positive values, suggesting some uncertainty about the significance of this coefficient at the 99% confidence level.
+
+
+
+## Question 3, part 3
+
+(0 points, just another example)
+
+The code below subtracts the observed mean for each party affiliation from the means of the bootstrapped data sets and calculates the proportion of the bootstrapped data that F-values as extreme as or more extreme that the observed F-statistic under the null hypothesis.
+
+```{r}
+# add a column of the observed means of total for each level of F_PARTY_FINAL to the bootstrapped data sets
+boot.data.sets.centered<-lapply(boot.data.sets,function(dat.this){left_join(dat.this,dat.agg,by="F_PARTY_FINAL")})
+# subtract the observed means from the values of total in the bootstrapped data sets
+boot.data.sets.centered<-lapply(boot.data.sets.centered,function(dat.this){mutate(dat.this,total=total-mean)})
+
+
+# extract  the F-statistic of the ANOVA for each bootstrapped data set
+boot.aov.F<-sapply(boot.data.sets.centered,function(dat.this){summary(aov(total~F_PARTY_FINAL,data=dat.this))[[1]]$`F value`[1]})
+# calculate the proportion of the bootstrapped data sets that have an F-value as extreme as the observed one
+mean(boot.aov.F>= m.aov[[1]]$`F value`[1]) 
+
+
+```
+
+This is quite small. This is evidence against the hypothesis that the means of the `total` for each level of `F_PARTY_FINAL` are equal. If the means were equal for the populations, we would expect the F-statistic for dat.sub to be fairly typical of F-statistics drawn from the data sets bootstrapped from centered data.
+
+

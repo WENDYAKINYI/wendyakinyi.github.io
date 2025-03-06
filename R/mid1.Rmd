@@ -1,0 +1,488 @@
+---
+title: "Midterm Exercises"
+author: "Wendy Akinyi"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(HistData)
+library(tinytex)
+library(ggplot2)
+library(knitr)
+```
+
+## Instructions
+
+Please work these problems on your own. You may use web searches and large language model queries, but must not consult other people online or in person. You must credit your sources. In questions with code blocks, full credit will reserved for effective use of R to reach a correct solution.
+
+All parts are worth 5 points.
+
+# Questions
+
+## Question 1 
+
+(Hypothetical) A survey consultant investigates whether, on a particular question with possible responses "important" and "not important", placing a response first makes respondents are more likely to select the it. The researcher conducts a pilot study that randomly assigns 100 respondents to one of two arms (aka groups), with 50 respondents in each arm. In the first arm, the respondents receive a survey in which the option "important" is listed first. In the second arm, the option is "not important" is listed first. The researcher records the number of times the option "important" is selected in each arm. The researcher's null hypothesis is that the probability of selecting "important" is the same in both arms. The researcher's null model is that the number of times "important" is selected in each arm is a binomial random variable with 50 trials and probability of success equal to the total number of times "important" was selected in both arms combined $t$, divided by 100, so $p=t/100$ is the probability of success in the null model. 
+
+Thus the null model is corresponds to a probability space $(\mathcal{S},\mathcal{M},\mathcal{P})$ with $\mathcal{S}=\{0,1,2,\ldots,50\} \times \{0,1,2,\ldots,50\}$, $\mathcal{M}$ the power set of $\mathcal{S}$, and $\mathcal{P}$ defined by the density function $f((k,l))=\binom{50}{k}p^k(1-p)^{50-k}\binom{50}{l}p^k(1-p)^{50-l}$ for $(k,l)\in\mathcal{S}$. 
+
+The researcher observes that the number of times "important" is selected in the first arm is 20 and the number of times "important" is selected in the second arm is 8.
+
+
+*  What is the probability under the null model of the event that the number of times "important" is chosen in the first arm is 20 or more?
+
+```{r}
+# Number of times "important" is selected in each arm
+ct<-c(20,8)
+# probability of success under the null model
+p<-sum(ct)/100
+# Number of trials in each arm
+n <- 50
+# The probability under the null model of the event that the number of times "important" is chosen in the first arm is 20 or more = 1 - pbinom(19, n, p) : pbinom(19, n, p) is the probability of 19 or fewer successes
+prob_20_or_more <- 1 - pbinom(19, n, p)
+
+# Print result
+print(prob_20_or_more)
+```
+
+*  What is the probability of the event that absolute difference between the number of times "important" is chosen in the two arms is greater than or equal to 12 under the null model? That is, what is the probability of the event $\{(k,l):|k-l|\geq 12\}$?
+
+The code below addresses the probability of the event $\{(k,l):l-k\geq 12\}$. You may build on this if you choose.
+
+```{r}
+
+# Probability sum
+prob_abs_diff_12_or_more <- 0
+
+# Looping over all possible values of k and l to sum the probabilities where |k - l| >= 12
+for (k in 0:50) {
+  for (l in 0:50) {
+    if (abs(k - l) >= 12) {
+      prob_kl <- dbinom(k, 50, p) * dbinom(l, 50, p)
+      prob_abs_diff_12_or_more <- prob_abs_diff_12_or_more + prob_kl
+    }
+  }
+}
+
+# Print result
+print(prob_abs_diff_12_or_more)
+
+```
+
+* Using the absolute difference as the test statistic, is there strong evidence against the null hypothesis that the probability of selecting "important" is the same in both arms? Please explain your answer.
+Given that 0.01015236 is less than 0.05 (significance level), the probability of observing an absolute difference as extreme as 12 or more under the null hypothesis is quite low. Therefore, there is strong evidence against the null hypothesis, suggesting that the probability of selecting "important" may not be the same in both arms.
+
+
+## Question 2 
+
+Consider the statement that, at a particular egg farm, a randomly selected egg from a full-grown hen is most likely to be graded "large". It's $\frac{1}{2}$ as likely to be graded "jumbo" as "large", $\frac{1}{4}$ as likely to be graded "extra large" as "large", and $\frac{1}{3}$ as likely to be graded "medium" as "large". These are the only grades that occur at this farm. Please define a reasonable probability space to model this information. You don't have to explain the model. What is the probability that a randomly selected egg is graded "large"?
+Sample Space:
+$[S = {\text{"jumbo"}, \text{"extra large"}, \text{"large"}, \text{"medium"}}]$
+
+Probability:
+Let $(P(\text{"large"}) = x)$.
+$(P(\text{"jumbo"}) = \frac{1}{2}x)$ because it's $(\frac{1}{2})$ as likely to be graded "jumbo" as "large".
+$(P(\text{"extra large"}) = \frac{1}{4}x)$ because it's $(\frac{1}{4})$ as likely to be graded "extra large" as "large".
+$(P(\text{"medium"}) = \frac{1}{3}x)$ because it's $(\frac{1}{3})$ as likely to be graded "medium" as "large".
+#The sum of their probabilities must equal 1:
+So;
+$[x + \frac{1}{2}x + \frac{1}{4}x + \frac{1}{3}x = 1]$
+
+Solving for x;
+$[x + \frac{2}{4}x + \frac{1}{4}x + \frac{4}{12}x = 1]$
+
+$[x + \frac{2}{4}x + \frac{1}{4}x + \frac{1}{3}x = 1]$
+
+$[x + \frac{1}{2}x + \frac{1}{4}x + \frac{1}{3}x = 1]$
+
+$[4x + 2x + x + \frac{4}{3}x = 4]$
+
+$[7x + \frac{4}{3}x = 4]$
+
+$[21x + 4x = 12]$ (Multiplying through by 3 to clear the denominator)
+
+$[25x = 12]$
+
+$[x = \frac{12}{25}]$
+
+Therefore, the probability of an egg being graded "large" is $0.48$ or 48%, .
+           the probability of an egg being graded "jumbo" is $0.24$ or 24%, 
+           the probability of an egg being graded "extra_large" is $0.12$ or 12%,
+           the probability of an egg being graded "medium" is $0.16$ or 16%.
+## Question 3
+
+Consider a continuous random variable $X$ with the probability density function defined by $f(x)=\frac{3}{2}x^2$ for $x\in[-1,1]$ and $f(x)=0$ otherwise. 
+
+* What is cumulative distribution of $X$? 
+$[ F(x) = \int_{-\infty}^{x} f(t) dt ]$
+$[ F(x) = \int_{-1}^{x} \frac{3}{2}t^2 dt \quad \text{for} \quad x \in [-1, 1] ]$
+$[ F(x) = \frac{1}{2} \left[ \frac{1}{3}t^3 \right]_{-1}^{x} = \frac{1}{6} \left[ x^3 - (-1)^3 \right] ]$
+$[ F(x) = \frac{1}{6} \left[ x^3 + 1 \right] ]$
+CDF:
+$[ F(x) = \frac{1}{6} \left[ x^3 + 1 \right] \quad \text{for} \quad x \in [-1, 1] ]$
+$(F(x) = 0)$ for $(x < -1)$, because the probability of $(X)$ being less than $(-1)$ is $0$.
+$(F(x) = 1)$ for $(x > 1)$, because the probability of $(X)$ being less than or equal to $(1)$ is 100%.
+The CDF $(F(x))$ of the random variable $(X)$ is:
+
+$[ F(x) = \begin{cases} 0 & \text{for } x < -1 ,\ \frac{1}{6} \left[ x^3 + 1 \right] & \text{for } -1 \leq x \leq 1 ,\ 1 & \text{for } x > 1 \end{cases} ]$
+
+* What is the expected value of $X$, $E[X]$?
+ 
+$[ E[X] = \int_{-\infty}^{\infty} x \cdot f(x)  dx ]$
+
+For the given PDF, this simplifies to:
+
+$[ E[X] = \int_{-1}^{1} x \cdot \frac{3}{2}x^2 , dx ]$
+
+Computing the integral:
+
+$[ E[X] = \frac{3}{2} \int_{-1}^{1} x^3 dx ]$
+
+$[ E[X] = \frac{3}{2} \left[ \frac{x^4}{4} \right]_{-1}^{1} ]$
+
+$[ E[X] = \frac{3}{2} \left( \frac{1^4}{4} - \frac{(-1)^4}{4} \right) ]$
+
+$[ E[X] = \frac{3}{2} \left( \frac{1}{4} - \frac{1}{4} \right) ]$
+
+$[ E[X] = \frac{3}{2} \cdot 0 ]$
+
+$[ E[X] = 0 ]$
+
+* What is the variance of $X$, $Var[X]$?
+
+$[ Var[X] = \int_{-\infty}^{\infty} (x - E[X])^2 \cdot f(x)dx ]$
+
+Substituting $(E[X] = 0)$ into the formula:
+
+$[ Var[X] = \int_{-1}^{1} (x - 0)^2 \cdot \frac{3}{2}x^2 dx ]$
+
+$[ Var[X] = \frac{3}{2} \int_{-1}^{1} x^4 dx ]$
+
+$[ Var[X] = \frac{3}{2} \left[ \frac{x^5}{5} \right]_{-1}^{1} ]$
+
+$[ Var[X] = \frac{3}{2} \left( \frac{1^5}{5} - \frac{(-1)^5}{5} \right) ]$
+
+$[ Var[X] = \frac{3}{2} \cdot \frac{2}{5} ]$
+
+$[ Var[X] = \frac{3}{5} ]$
+
+
+## Question 4 
+
+Consider the probability space $(S,M,P)$ where $S=\{t,u,v,w,x,y,z\}$, the set of events $M$ is the power set of $S$, and $P$ is defined by letting the density function $f:S\rightarrow [0,1]$ satisfy $f(z)=\frac{1}{3}$ and $f(t)=f(u)=f(v)=f(w)=f(x)=f(y)=\frac{1}{9}$. Define the events $A=\{t,u,v,z\}$, $B=\{u,w,x,z\}$, and $C={v,x,y,z}$ 
+
+* Are the events $A$ and $B$ independent? Are the events $A$ and $C$ independent? Are the events $B$ and $C$ independent? 
+Two events $A$ and $B$ are independent if and only if $P(A \cap B) = P(A)P(B)$.
+$[P(A) = f(t) + f(u) + f(v) + f(z) = \frac{1}{9} + \frac{1}{9} + \frac{1}{9} + \frac{1}{3} = \frac{2}{3}]$
+
+$[P(B) = f(u) + f(w) + f(x) + f(z) = \frac{1}{9} + \frac{1}{9} + \frac{1}{9} + \frac{1}{3} = \frac{2}{3}]$
+
+$[P(C) = f(v) + f(x) + f(y) + f(z) = \frac{1}{9} + \frac{1}{9} + \frac{1}{9} + \frac{1}{3} = \frac{2}{3}]$
+
+And:
+$[A \cap B = {u, z}][P(A \cap B) = f(u) + f(z) = \frac{1}{9} + \frac{1}{3} = \frac{4}{9}]$
+
+$[A \cap C = {v, z}] [P(A \cap C) = f(v) + f(z) = \frac{1}{9} + \frac{1}{3} = \frac{4}{9}]$
+
+$ [B \cap C = {x, z}] [P(B \cap C) = f(x) + f(z) = \frac{1}{9} + \frac{1}{3} = \frac{4}{9}]$
+For Independence:$P(A \cap B) = P(A)P(B)$.$\frac{4}{9} =\frac{2}{3}*\frac{2}{3}$
+                  Yes. Events  $A$ and $B$ are independent.
+                  $P(A \cap C) = P(A)P(C)$.$\frac{4}{9} =\frac{2}{3}*\frac{2}{3}$
+                  Yes. Events  $A$ and $C$ are independent.
+                  $P(B \cap C) = P(B)P(C)$.$\frac{4}{9} =\frac{2}{3}*\frac{2}{3}$
+                  Yes. Events  $B$ and $C$ are independent.
+
+
+* Are the events $A\cap B$ and $C$ independent?
+                 $P(A \cap B)\cap C = P(A \cap B)P(C)$.
+                 $\frac{1}{3} \neq\frac{4}{9}*\frac{2}{3}$
+                  No. Events $A\cap B$ and $C$  are not independent.
+
+* Are the events $A$, $B$ and $C$ mutually independent?
+                $P(A \cap B \cap C )= P(A)P(B)P(C)$
+                $\frac{1}{3} \neq \frac{2}{3}* \frac{2}{3}*\frac{2}{3}$ 
+                No. Events $A$ $B$ and $C$  are not mutually independent.
+
+## Question 5 
+
+Consider a continuous random variable $X$ with the probability density function defined by $f(x)=\frac{2}{x^2}$ for $x\in [2,\infty)$ and $f(x)=0$ otherwise. 
+
+```{r}
+integrate(function(x) 2*x^(-2),2,Inf)
+```
+
+* Please give the expected value $E[X]$ of $X$ if possible, or explain why it is not possible.
+
+$[E[X] = \int_{-\infty}^{\infty} x f(x) dx]$
+
+$[E[X] = \int_{2}^{\infty} x \left(\frac{2}{x^2}\right) dx]$
+
+Simplifying:
+
+$[E[X] = \int_{2}^{\infty} \frac{2}{x} dx]$
+
+$[E[X] = 2 \ln(x) \Big|_{2}^{\infty}]$
+
+Limits:
+
+At the upper limit $((\infty))$, $(\ln(\infty))$ approaches infinity.
+
+Since the integral does not converge it is not possible to provide a finite expected value (E[X]) for the given PDF.
+
+## Question 6 
+
+Suppose that $(\mathcal{S},\mathcal{M},\mathcal{P})$ is a probability space modeling three independent samples from a Normal distribution with mean $\mu$ and variance $\sigma^2$. Here, $\mathcal{S}=\{(x_1,x_2,x_3):(x_1,x_2,x_3)\in\mathbb{R}^3\}$, $\mathcal{M}$ includes all rectangular solids , and $\mathcal{P}$ is defined by the density function $$f((x_1,x_2,x_3))=\prod_{i=1}^3\frac{1}{(2\pi\sigma^2)^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(x_i-\mu)^2\right)$$
+Let $X$ be the random variable defined by $X((x_1,x_2,x_3))=\max (x_1,x_2,x_3)$. This induces a probability space $(\mathcal{S}_X,\mathcal{M}_X,\mathcal{P}_X)$ with $\mathcal{S}_X=\mathbb{R}$ and $\mathcal{M}$ including all intervals,  With a bit of multivariate calculus, it can be shown that the density function of the probability space induced by $X$ is $$f_X(t)=3\left[\int_{-\infty}^{t}\frac{1}{(2\pi\sigma^2)^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(x-\mu)^2\right)dx\right]^2\frac{1}{(2\pi\sigma^2)^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(t-\mu)^2\right)$$. 
+
+The data set `samp.vec.RData` contains 30 independent samples from this probability space for fixed parameters $\mu$ and $\sigma^2$. Please complete the code below to find and display the maximum likelihood estimate for $\mu$ and $\sigma^2$.
+
+
+```{r}
+
+load("samp.vec.RData")
+
+# negative log-likelihood function
+negloglik <- function(theta, samp) {
+  mu <- theta[1]
+  sigma <- theta[2]
+  
+  # negative log-likelihood calculation
+  -sum(log(3) + 2 * pnorm(samp, mu, sigma, log.p = TRUE) + log(dnorm(samp, mu, sigma)))
+}
+
+# Using optim to find the MLE
+initial_values <- c(mean(samp.vec), sd(samp.vec))  # Initial values for optimization
+
+mle_result <- optim(par = initial_values, fn = negloglik, samp = samp.vec)
+
+# MLE estimates
+mu_mle <- mle_result$par[1]
+sigma_mle <- mle_result$par[2]
+
+# Maximum Likelihood Estimate display
+cat("Maximum Likelihood Estimate for mu:", mu_mle, "\n")
+cat("Maximum Likelihood Estimate for sigma^2:", sigma_mle^2, "\n")
+
+
+
+```
+
+
+## Question 7 
+
+If you model the data in `samp_vec.RData` as a sample from a Normal distribution $Normal(\mu,\sigma^2)$, what is the maximum likelihood estimate for the $\mu$ ?
+
+```{r}
+# Load 'samp.vec.RData'
+load("samp.vec.RData")
+
+# MLE for mu (mean) of a normal distribution function
+calculate_mle_mu <- function(sample_vector) {
+  # The MLE for mu is the sample mean
+  mle_mu = mean(sample_vector)
+  
+  return(mle_mu)
+}
+
+# MLE for mu 
+mle_mu = calculate_mle_mu(samp.vec)
+
+# Maximum Likelihood Estimate display
+cat("The Maximum Likelihood Estimate (MLE) for mu (mean) is:", mle_mu, "\n")
+
+```
+
+*  If you model the data in `samp_vec.RData` as a sample from a Normal distribution $Normal(\mu,\sigma^2)$, what is the maximum likelihood estimate for the $\sigma^2$ ?
+
+```{r}
+# Load data
+load("samp.vec.RData")
+
+# MLE for sigma^2 (variance) of a normal distribution function
+calculate_mle_sigma2 <- function(sample_vector) {
+  n <- length(sample_vector)
+  sample_mean <- mean(sample_vector)
+  
+  # MLE for variance of a normal distribution
+  mle_sigma2 = sum((sample_vector - sample_mean)^2) / n
+  
+  return(mle_sigma2)
+}
+
+# MLE for sigma^2 
+mle_sigma2 = calculate_mle_sigma2(samp.vec)
+
+# Maximum Likelihood Estimate display
+cat("The Maximum Likelihood Estimate (MLE) for sigma^2 (variance) is:", mle_sigma2, "\n")
+
+```
+
+*  Please plot the data with a density histogram (In ggplot, try "geom_histogram(aes(y=after_stat(density))"). On the same plot, please plot the density function of the Normal distribution with the mean equal to the maximum likelihood value of the mean computed above and variance equal to the maximum likelihood value of the mean computed above
+
+```{r}
+# Load data
+load("samp.vec.RData")
+
+# Function to calculate MLE for mu and sigma^2
+calculate_mle_parameters <- function(sample_vector) {
+  n <- length(sample_vector)
+  sample_mean <- mean(sample_vector)
+  sample_variance <- sum((sample_vector - sample_mean)^2) / n
+  
+  return(list(mean = sample_mean, variance = sample_variance))
+}
+
+# MLE for mu and sigma^2
+mle_params <- calculate_mle_parameters(samp.vec)
+mle_mu <- mle_params$mean
+mle_sigma2 <- mle_params$variance
+
+# data frame for plotting
+plot_data <- data.frame(x = samp.vec)
+
+# Plotting the data with density histogram and overlay of normal distribution
+ggplot(plot_data, aes(x = x)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "lightgreen", color = "black", alpha = 0.7) +
+  stat_function(fun = dnorm, args = list(mean = mle_mu, sd = sqrt(mle_sigma2)), color = "orange", linewidth = 1) +
+  labs(title = "Density Histogram with Normal Distribution Overlay",
+       x = "Value", y = "Density") +
+  theme_minimal()
+
+  
+
+```
+
+## Question 8 
+
+These questions are based on the probability space $Normal(\mu,\sigma^2)$ where $\mu=-20$ and $\sigma^2=25$. Please note that the "sd" parameter is $\sigma$, not $\sigma^2$. 
+
+*  For this probability space, what is the probability of the event $(-\infty,-30)$?
+
+```{r}
+
+
+# Parameters for the normal distribution
+mu <- -20  # Mean (μ)
+sigma <- sqrt(25)  # Standard deviation (σ), sqrt(σ^2)
+
+# probability of the event (-∞, -30)
+probability <- pnorm(-30, mean = mu, sd = sigma)
+
+# Display
+cat("The probability of the event (-∞, -30) is:", probability, "\n")
+
+
+```
+
+*  For this probability space, what is the probability of the event $(-30,\infty)$?
+
+```{r}
+
+#probability of the event (-30, ∞)
+probability <- 1 - pnorm(-30, mean = mu, sd = sigma)
+
+# Display
+cat("The probability of the event (-30, ∞) is:", probability, "\n")
+```
+
+
+* For this probability space, what is the probability of the event $(-30,-27)$?
+
+```{r}
+
+#cumulative probability up to -30
+prob_neg30 <- pnorm(-30, mean = mu, sd = sigma)
+
+#cumulative probability up to -27
+prob_neg27 <- pnorm(-27, mean = mu, sd = sigma)
+
+#probability of the event (-30, -27)
+probability <- prob_neg27 - prob_neg30
+
+# Display
+cat("The probability of the event (-30, -27) is:", probability, "\n")
+```
+
+## Question 9 
+
+This question uses the  data "usa_00022.csv" provided with this assignment. These data are from The Census Bureau's American Community Survey (ACS) Public Use Microdata Sample (PUMS) for 2021. They were downloaded from IPUMS: Steven Ruggles, Sarah Flood, Ronald Goeken, Megan Schouweiler and Matthew Sobek. IPUMS USA: Version 12.0 [dataset]. Minneapolis, MN: IPUMS, 2022. 
+https://doi.org/10.18128/D010.V12.0
+
+PRESGL is a constructed variable that assigns a Siegel prestige score to each occupation. PRENT is a constructed variable that assigns a Nakao-Treas prestige score to each occupation. The IPUMS documentation states that there is significant debate about the usefulness of composite measures of occupational standing.
+
+```{r}
+dat<-read.csv("usa_00022.csv")
+names(dat)<-str_to_lower(names(dat)) # variable names to lower case
+boulder<-filter(dat,puma==802 | puma==803, empstat==1) # filter to only employed people in Boulder
+ggplot(boulder,aes(x=presgl,y=prent))+
+  geom_point(alpha=.1) 
+
+```
+
+
+* Please find and display the slope $m$ and intercept $b$ of the least squares best fit line for the model $PRENT=m(PRESGL)+b$ for the data set `boulder` constructed above. 
+
+```{r}
+# Fit linear regression model
+model <- lm(prent ~ presgl, data = boulder)
+
+#slope and intercept
+slope <- coef(model)["presgl"]
+intercept <- coef(model)["(Intercept)"]
+
+# Print the slope (m) and intercept (b)
+cat("Slope (m):", slope, "\n")
+cat("Intercept (b):", intercept, "\n")
+
+```
+
+
+
+## Question 10 (based on week 6 material) 
+
+Consider the probability space $(\mathcal{S},\mathcal{M},\mathcal{P})$ defined by $\mathcal{S}=\{1,2,3,4,5\}\times\{1,2,3,4\}\subset\mathbb{R}^2$, $\mathcal{M}$ equals the power set of $\mathcal{S}$, and the density function $f((a,b))=\frac{ab}{150}$. Define the following projection random variable on this probability space: $X:X((a,b))=a$.
+
+Projection Random Variable:
+$[X: \mathcal{S} \rightarrow \mathbb{R}, \quad X((a, b)) = a]$ which means for every element $((a, b))$ in $(\mathcal{S})$, $(X)$ assigns the value of $(a)$. The outcome is a real number since $(a \in \mathbb{R})$.
+
+What is the marginal distribution corresponding to $X$. Please give the sample space and the density function.
+
+Sample Space of $(X)$:$(\mathcal{S}_X) = ({1,2,3,4,5})$
+
+The marginal pdf of (X);
+
+$[ f_X(a) = \sum_{b=1}^{4} f((a,b)) ]$
+
+Since $(f((a,b))=\frac{ab}{150})$;
+
+$[ f_X(a) = \sum_{b=1}^{4} \frac{ab}{150} = \frac{a}{150} \sum_{b=1}^{4} b = \frac{a}{150} \cdot 10 = \frac{a}{15} ]$
+
+where $(\sum_{b=1}^{4} b = 1+2+3+4 = 10)$.
+
+Hence, the marginal pdf of $(X)$ is $(f_X(a) = \frac{a}{15})$, for $(a \in {1,2,3,4,5})$.
+
+Values for $(a \in {1,2,3,4,5})$
+For (a = 1):
+$[ P(X=1) = \sum_{b=1}^{4} \frac{1\cdot b}{150} = \frac{1}{150} \cdot (1+2+3+4) = \frac{10}{150} = \frac{1}{15} ]$
+
+For (a = 2):
+$[ P(X=2) = \sum_{b=1}^{4} \frac{2\cdot b}{150} = \frac{2}{150} \cdot (1+2+3+4) = \frac{20}{150} = \frac{4}{15} ]$
+
+For (a = 3):
+$[ P(X=3) = \sum_{b=1}^{4} \frac{3\cdot b}{150} = \frac{3}{150} \cdot (1+2+3+4) = \frac{30}{150} = \frac{3}{5} ]$
+
+For (a = 4):
+$[ P(X=4) = \sum_{b=1}^{4} \frac{4\cdot b}{150} = \frac{4}{150} \cdot (1+2+3+4) = \frac{40}{150} = \frac{8}{15} ]$
+
+For (a = 5):
+$[ P(X=5) = \sum_{b=1}^{4} \frac{5\cdot b}{150} = \frac{5}{150} \cdot (1+2+3+4) = \frac{50}{150} = \frac{1}{3} ]$
+
+
+
+
+
+

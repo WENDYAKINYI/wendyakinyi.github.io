@@ -1,0 +1,313 @@
+---
+title: "Problem Set 7"
+author: "A.Wendy"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(MASS)
+library(caret)
+library(DescTools)
+library(ggpubr)
+
+```
+
+
+## Introduction
+
+Please complete the following tasks regarding the data in R. Please generate a solution document in R markdown and upload the .Rmd document and a rendered  .doc, .docx, or .pdf document. Please turn in your work on Canvas. Your solution document should have your answers to the questions and should display the requested output.
+
+The following settings were used to produce the output shown here:
+
+```{r}
+R.Version()$version.string # "R version 4.3.2 (2023-10-31 ucrt)"
+
+RNGkind() # "Mersenne-Twister" "Inversion"        "Rejection"
+
+
+```
+
+The RNGkind can be set using the following code, uncommented.
+
+```{r}
+#RNGkind("Mersenne-Twister", "Inversion",  "Rejection")
+```
+
+# Question 1
+
+In this question, we will look at the issue of multiple testing in the context of model selection with many candidate variables.
+
+Spoiler: the take-away is that using automated model selection methods on large collections of uncritically chosen explanatory variables is a bad idea.
+
+First, we will simulate data with an outcome variable `y` with a large collection of explanatory variables `x1`, `x2`, ..., `x20`. We will then fit several linear regression models with `y` as the outcome and all the `x` variables as the set of possible explanatory variables. 
+
+ * We will use the `step` function to select a forward model with the best AIC.
+ 
+ * We will use the `step` function to select a full sequence of forward models, selecting the one with the best SSE on a validation set.
+ 
+ * We will use cross-validation to select a model with the best total SSE on the held out folds.
+ 
+A lot of code, following the examples in class, is provided. You will need uncomment some code and write some code to complete the problem set.
+ 
+### Data simulation
+
+
+```{r}
+p<-20 # number of explanatory variables
+n=65 # number of observations
+set.seed(9876)
+#set.seed(6789) # Try running all the code with this seed instead for part 6
+X<-matrix(rnorm(n*p),n,p) # explanatory variables
+y<-rnorm(n) # outcome variable
+dat.sim<-data.frame(y=y,X)
+dat.sim.train<-dat.sim[1:35,] # training set for train-validate-test
+dat.sim.valid<-dat.sim[36:50,] # validation set for train-validate-test
+dat.sim.test<-dat.sim[51:65,] # test set for train-validate-test
+dat.sim.aic<-dat.sim[1:50,] # data set for AIC model selection and cross-validation. This merges the training and validation sets because these two methods don't use a separate validation set.
+
+```
+
+## Question 1, part 1
+
+(5 points)
+
+The simulated data does follow the model $\mathbf{y}=X\boldsymbol{\beta}+\boldsymbol{\varepsilon}$ where $\boldsymbol{\varepsilon}$ is a vector of independent random variables distributed as $N(0,\sigma^2)$ and $X$ is the matrix of explanatory variables, including a column of 1's. For these data, what is the value of $\boldsymbol{\beta}$?
+
+Since $y$ is generated as random normal values, the true coefficients $\boldsymbol{\beta}$ are effectively zero for all variables. This is because the explanatory variables have no effect on the outcome variable $y$.
+
+## Question 1, part 2
+
+(5 points)
+
+Please fit a forward model with AIC as the stopping criterion on the simulated data set `dat.sim.aic` with `y` as the outcome variable and all the other variables as the candidates for explanatory variables. Please display the summary of the selected model. Based on the summary alone, not the process, would you report that the model is a statistically significant improvement over the null model?
+
+Based on the summary alone, the high p-value for the F-statistic (0.3742) suggests that the model with all 20 explanatory variables does not significantly improve the fit compared to the null model (which only includes an intercept). The adjusted R-squared is also quite low (0.05043), implying that the model does not explain much of the variability in the outcome variable $y$. Therefore, I would not report that the model is a statistically significant improvement over the null model. 
+
+```{r}
+
+fmla.sim<-as.formula(str_c("y~",
+                            str_c(names(dat.sim.aic)[2:ncol(dat.sim)],collapse="+")))
+
+# Forward model with AIC stopping criterion
+m.forward.sim <- step(lm(fmla.sim, data = dat.sim.aic), direction = "forward", trace = FALSE)
+
+# Display the summary of the selected model
+summary(m.forward.sim)
+
+# Compare the selected model to the null model
+anova(lm(y ~ 1, data = dat.sim.aic), m.forward.sim)
+
+```
+
+
+
+## Question 1, part 3
+
+(10 points)
+
+Please fit a forward model on the training data `dat.sim.train` with SSE on the validation set as the stopping criterion. Please display the summary of the selected model. Based on the summary alone, not the process, would you report that the model is a statistically significant improvement over the null model?
+
+Based on the provided summary, the model with X6 does not show a statistically significant improvement over the null model at the typical significance level of 0.05, as the p-value of the F-statistic is 0.06421, indicating a potential trend. The Adjusted R-squared value is also low , showing that the model explains only a small proportion of the variance in the data.
+
+### error calculation
+
+```{r}
+# The function "sse.valid" calculates the sum of squared errors when the outcomes in dat are predicted by the model m.
+
+sse.valid<-function(m,dat){
+  sum((dat$y-predict(m,newdata=dat))^2)
+}
+
+
+```
+
+### formula construction
+
+```{r}
+
+# Code to extract the variables added in order in a call to "step" with
+# direction equal to "forward"
+
+vars.get<-function(model.forward){
+  vars.add<-model.forward$anova[,1]
+  vars.add<-str_replace(vars.add,"\\+ ","")
+  vars.add[1]<-1
+  return(vars.add)
+}
+
+# create a formula for `outcome` in terms of sequences of variables in "vars.add"
+
+fmla.add.fnc<-function(i,vars.add,outcome="y~"){
+  vars.in<-vars.add[1:i]
+  return(as.formula(paste(outcome, paste(vars.in, collapse = "+"))))
+  # return(your code here)
+  
+}
+
+```
+
+
+```{r}
+# function to calculate the sum of squared errors on dat.valid.this for the forward models fit to dat.this using the scope fmla.this
+sse.get<-function(dat.this,fmla.this,dat.valid.this){
+  m.forward<-step(lm(y~1,data=dat.this),scope=fmla.this,
+                  k=0,direction="forward",trace=0)
+  # Collect the variables used in the order in which they were added
+  vars.add<-vars.get(m.forward)
+  
+  # Apply "fmla.add.fnc" to each value of "i". This
+  # gives the formulas for the models generated using initial sequences of the 
+  # variables in vars.add
+  # Note that the first formula is for the model with just the intercept.
+  
+  fmlas<-apply(matrix(1:length(vars.add),ncol=1),1,
+               fmla.add.fnc,vars.add=vars.add,outcome="y~")
+  
+  # Make a list of models corresponding to these formulas.
+  models<-
+    lapply(fmlas,function(x){lm(x,data=dat.this)})
+  
+  # Calculate the sse on "dat.valid" for each model.
+  sse_values <- sapply(models, sse.valid, dat = dat.valid.this)
+  return(sse_values)
+  #return(your code here)
+}
+```
+
+
+Check that the function `sse.get` works as expected. Note the function `createFolds` from `caret` to create the folds for cross-validation. 
+By the way, if `y` is a factor, the function creates a stratified sample: approximately the same proportion of each level of y is in each fold.
+
+Please run this code to check that your function performs as required:
+
+
+```{r}
+
+set.seed(12345678)
+  ind <- createFolds(dat.sim.aic$y,k = 8, list = FALSE)
+  
+sse_values <- sse.get(dat.sim.aic[ind != 1, ], fmla.sim, dat.sim.aic[ind == 1, ])
+print(sse_values[1:5])  
+
+# sse.get(dat.sim.aic[ind!=1,],fmla.sim,dat.sim.aic[ind==1,])[1:5]
+# "[1] 2.690232 2.622942 4.274632 4.489082 4.475933" should be returned
+
+
+```
+
+
+Fit the forward model on the training data with validation SSE as the stopping criterion. 
+
+```{r}
+ m.forward.sim.all<-sse.get(dat.sim.train,fmla.sim,dat.sim.valid)
+ size.valid<- which.min(m.forward.sim.all)
+
+
+ model.valid.stop<-step(lm(y~1,data=dat.sim.train),scope=fmla.sim,k=0,
+                   direction="forward",steps=size.valid-1,trace=0)
+ summary(model.valid.stop)
+ anova(lm(y~1,data=dat.sim.train),model.valid.stop)
+```
+
+For future reference, fit the model with the selected variables on the training and validation data together 
+
+```{r}
+vars<-attr(model.valid.stop$coefficients,"names")[-1]
+fmla.tvt<-as.formula(str_c("y~",                          str_c(vars,collapse="+")))
+m.valid.stop.sim<-lm(fmla.tvt,data=dat.sim.aic)
+anova(lm(y~1,data=dat.sim.aic),m.valid.stop.sim)
+```
+
+## Question 1, part 4
+
+(10 points)
+
+Please a forward model on the training data `dat.sim.aic` with the smallest 8-fold cross-validation SSE as the stopping criterion. Please display the summary of the selected model. Based on the summary alone, not the process, would you report that the model is a statistically significant improvement over the null model?
+
+Based on the summary alone, I would not report that the model is a statistically significant improvement over the null model since the model is the null model (intercept-only) and it does not include any explanatory variables that could improve the fit of the model. This is because the forward selection process with cross-validation did not identify any explanatory variables that significantly improve the model. 
+
+```{r}
+# function to use an index set ind to construct the training and validation sets for use in sse.get. The function returns the sum of squared errors on the ith fold for the forward models fit to the training set of data with the ith fold omitted.
+
+sse.wrapper <- function(i, dat.w, ind.w, fmla.w) {
+  sse.get(dat.w[ind.w != i, ], fmla.w, dat.w[ind.w == i, ])
+}
+
+# Please run this code to check that your function performs as required:
+ set.seed(12345678)
+   ind <- createFolds(dat.sim.aic$y,k = 8, list = FALSE)
+sse_values <- sse.get(dat.sim.aic[ind != 1, ], fmla.sim, dat.sim.aic[ind == 1, ])
+print(sse_values[1:5])  
+# "[1] 2.690232 2.622942 4.274632 4.489082 4.475933" should be returned
+ 
+```
+
+
+```{r}
+# this function takes a data set and scope formula and returns the cross-validation errors for the forward models fit to the data set with the scope formula
+sse.sums.xv<-function(dat.this,fmla.this){
+  ind <- createFolds(factor(dat.this$y), k = 8, list = FALSE)
+  xv.mat<-apply(matrix(1:8,ncol=1),1,sse.wrapper,dat.w=dat.this,
+        ind.w=ind,
+        fmla.w=fmla.this)
+  return(apply(xv.mat,1,sum))
+}
+```
+
+Find the best model size using cross-validation. Fit the model of this size.
+
+```{r}
+set.seed(12345678)
+ sse.vec<-sse.sums.xv(dat.sim.aic,fmla.sim)
+ model.size<- which.min(sse.vec)
+
+
+```
+
+```{r}
+ m.xv.stop.sim<-step(lm(y~1,data=dat.sim.aic),scope=fmla.sim,
+                    direction="forward",steps=model.size-1,k=0,trace=0)
+ summary(m.xv.stop.sim)
+ anova(lm(y~1,data=dat.sim.aic),m.xv.stop.sim)
+
+```
+
+## Question 1, part 5
+
+(10 points)
+
+Please compute the SSE that results when the models selected by forward selection with AIC as the stopping criterion, forward selection with validation SSE as the stopping criterion, and forward selection using cross-validation as the stopping criterion are used to predict `y` on the test data. 
+
+
+Note that in practice, model selection is finished *before* the performance on test data is checked. *Applying multiple models to the test data is not part of the model selection paradigm!*
+
+The model selected by forward selection with validation SSE has the lowest SSE on the test data, making it the best-performing model among the ones considered.
+
+The model selected by forward selection with AIC has the highest SSE on the test data, indicating the poorest performance among the models considered.
+
+The null model (intercept-only) has an SSE value similar to the cross-validation model, indicating that the cross-validation model may not be significantly better than the null model in terms of predictive performance on the test data.
+
+```{r}
+# Compute SSE for the model selected by forward selection with AIC
+ sse.valid(m.forward.sim,dat.sim.test)
+# Compute SSE for the model selected by forward selection with validation SSE
+ sse.valid(m.valid.stop.sim,dat.sim.test)
+ # Compute SSE for the model selected by forward selection using cross-validation
+ sse.valid(m.xv.stop.sim,dat.sim.test)
+ # Compute SSE for the null model
+ sse.valid(lm(y~1, data=dat.sim.aic),dat.sim.test) # compare to null model
+```
+
+## Question 1, part 6
+
+(5 points)
+
+Based on the summaries of the models selected by the three methods, `m.forward.sim`, `model.valid.stop.sim`, and `forward.model.xv.sim`, can the p-values of the coefficients after model selection and the p-values comparing the selected model to the null model be trusted? Please explain your answer. (You may want rerun all your code using the `Run All` option with the first seed in the data simulation code at the beginning of the problem set changed to the seed that was commented out to better inform your answer.) How does this relate to the take-away that using automated model selection methods on large collections of uncritically chosen variables is a bad idea?
+
+No, the p-values of the coefficients after model selection cannot be trusted. This is because the automated model selection process in this case the forward selection, involves multiple hypothesis tests and model comparisons which can lead to the problem of p-values being artificially inflated due to the increased probability of finding significant variables by chance.Therefore, using automated model selection methods on large collections of variables is a bad idea, as it can lead to overfitting and unreliable inferences. 
