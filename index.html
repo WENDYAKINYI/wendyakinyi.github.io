@@ -6,21 +6,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wendy Akinyi's Portfolio</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        nav {
+            background-color: #f67280;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            margin-top: 80px;
+        }
+
+        .project-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+    </style>
 </head>
 
 <body>
+    <nav>
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
     <header>
         <img src="images/wendy-profile.jpeg" alt="Wendy Akinyi" class="profile-pic">
         <h1>Wendy Akinyi</h1>
         <p>Data Scientist | Mechanical Engineer | Project Manager</p>
     </header>
 
-    <section class="about">
+    <section class="about" id="about">
         <h2>About Me</h2>
         <p>I’m Wendy Akinyi — a data-driven professional with deep expertise in Natural Language Processing (NLP), machine learning, and real-time analytics. With a background in Mechanical Engineering and a Master's in Data Science from the University of Denver, I bring a unique blend of engineering precision and analytical creativity to every project. I’ve designed fraud detection systems for financial data, deployed ETL pipelines, optimized electric vehicle charging infrastructure, and built predictive models across text, audio, and visual domains. My goal is to turn data into actionable insights that solve real-world problems. I'm also the founder of Shoes of Hope, a social enterprise uplifting underprivileged children — one pair of shoes at a time.</p>
     </section>
 
-    <section class="projects">
+    <section class="projects" id="projects">
         <h2>Featured Projects</h2>
 
         <div class="project-card">
@@ -57,7 +119,7 @@
 
     </section>
 
-    <footer>
+    <footer id="contact">
         <p>Contact: <a href="mailto:weakyy97@gmail.com">weakyy97@gmail.com</a></p>
         <p><a href="https://www.linkedin.com/in/akinyi-wendy-598a85172" target="_blank">LinkedIn</a> | <a
                 href="https://github.com/WENDYAKINYI/wendyakinyi.github.io">GitHub</a></p>
