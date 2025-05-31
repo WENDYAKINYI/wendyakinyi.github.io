@@ -131,7 +131,7 @@ footer a:hover {
   .profile-pic {
     width: 160px;
     height: 160px;
-    border: 10px solid white;
+    border: 5px solid white;
   }
 
   .about, .projects, footer {
