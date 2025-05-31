@@ -28,6 +28,19 @@ header {
   text-align: center;
   padding: 8rem 1rem 2rem; /* Increased top padding further to avoid overlap */
   border-bottom: 3px solid #f5c6aa;
+  animation: fadeInUp 1s ease forwards;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Profile image */
@@ -40,6 +53,11 @@ header {
   margin-bottom: 1rem;
   border: 6px solid white;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.profile-pic:hover {
+  transform: scale(1.05);
 }
 
 /* Sections */
@@ -50,18 +68,7 @@ header {
   padding: 2rem;
   max-width: 1000px;
   margin: 2rem auto;
-  animation: fadeInUp 0.8s ease both;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation: fadeInUp 1s ease forwards;
 }
 
 /* Project Cards */
@@ -75,6 +82,7 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  animation: fadeInUp 0.8s ease forwards;
 }
 
 .project-card:hover {
@@ -99,22 +107,6 @@ header {
   text-decoration: none;
 }
 
-.project-card a[href*="demo"],
-.project-card a[target="_blank"] {
-  color: #8e44ad; /* Purple shade for Live Demo */
-  background-color: #fbeaff;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  display: inline-block;
-  margin-top: 0.5rem;
-}
-
-.project-card a[href*="demo"]:hover,
-.project-card a[target="_blank"]:hover {
-  background-color: #e4cfff;
-  text-decoration: underline;
-}
-
 .project-card a[href*="github"] {
   color: #f67280;
 }
@@ -126,6 +118,7 @@ header {
   border-radius: 4px;
   display: inline-block;
   margin-top: 0.5rem;
+  transition: background-color 0.3s ease;
 }
 
 .live-demo:hover {
@@ -161,6 +154,35 @@ header {
   cursor: pointer;
   font-weight: bold;
   z-index: 1001;
+}
+
+/* Hamburger Menu */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1002;
+  color: white;
+}
+
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f67280;
+  padding: 1rem;
+  position: fixed;
+  top: 60px;
+  width: 100%;
+  z-index: 1001;
+}
+
+.mobile-nav.open {
+  display: flex;
 }
 
 /* Navigation */
@@ -218,7 +240,7 @@ footer a:hover {
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
   header {
-    padding: 10rem 1rem 2rem; /* Extra top padding for mobile to avoid nav overlap */
+    padding: 10rem 1rem 2rem;
   }
 
   .project-card {
@@ -237,8 +259,17 @@ footer a:hover {
   }
 
   nav ul {
+    display: none;
+  }
+
+  nav ul.show {
+    display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .menu-toggle {
+    display: block;
   }
 
   nav ul li a {
