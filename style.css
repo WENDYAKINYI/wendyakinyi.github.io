@@ -95,13 +95,28 @@ header {
 }
 
 .project-card a {
-  color: #f67280;
   font-weight: bold;
   text-decoration: none;
 }
 
-.project-card a:hover {
+.project-card a[href*="demo"],
+.project-card a[target="_blank"] {
+  color: #8e44ad; /* Purple shade for Live Demo */
+  background-color: #fbeaff;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.project-card a[href*="demo"]:hover,
+.project-card a[target="_blank"]:hover {
+  background-color: #e4cfff;
   text-decoration: underline;
+}
+
+.project-card a[href*="github"] {
+  color: #f67280;
 }
 
 /* Resume Button */
