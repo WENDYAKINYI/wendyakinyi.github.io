@@ -26,8 +26,8 @@ header {
 
 /* Profile image */
 .profile-pic {
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   object-fit: cover;
   object-position: top;
   border-radius: 50%;
