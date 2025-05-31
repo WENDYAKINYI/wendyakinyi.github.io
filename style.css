@@ -129,9 +129,9 @@ footer a:hover {
   }
 
   .profile-pic {
-    width: 120px;
-    height: 120px;
-    border: 5px solid white;
+    width: 140px;
+    height: 140px;
+    border: 1px solid white;
   }
 
   .about, .projects, footer {
