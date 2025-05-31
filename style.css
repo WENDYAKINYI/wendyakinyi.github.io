@@ -26,12 +26,13 @@ header {
 
 /* Profile image */
 .profile-pic {
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   object-fit: cover;
+  object-position: top;
   border-radius: 50%;
   margin-bottom: 1rem;
-  border: 4px solid white;
+  border: 6px solid white;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -128,8 +129,9 @@ footer a:hover {
   }
 
   .profile-pic {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
+    border: 5px solid white;
   }
 
   .about, .projects, footer {
