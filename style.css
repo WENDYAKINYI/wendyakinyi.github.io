@@ -119,6 +119,20 @@ header {
   color: #f67280;
 }
 
+.live-demo {
+  color: #8e44ad;
+  background-color: #fbeaff;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.live-demo:hover {
+  background-color: #e4cfff;
+  text-decoration: underline;
+}
+
 /* Resume Button */
 #resume {
   display: inline-block;
